@@ -18,6 +18,8 @@ public class SleepSession {
     private int remMinutes;
     private int averageHeartRate;
     private double averageMovement;
+    private double spo2;
+    private double skinTemperature;
     private double deltaPower;
     private double thetaPower;
     private double alphaPower;
@@ -32,7 +34,8 @@ public class SleepSession {
     public SleepSession(User user, LocalDateTime startTime, LocalDateTime endTime,
                          int totalMinutes, int awakeMinutes, int lightMinutes,
                          int deepMinutes, int remMinutes, int averageHeartRate,
-                         double averageMovement, double deltaPower, double thetaPower,
+                         double averageMovement, double spo2, double skinTemperature,
+                         double deltaPower, double thetaPower,
                          double alphaPower, double betaPower, int qualityScore) {
         this.user = user;
         this.startTime = startTime;
@@ -41,9 +44,11 @@ public class SleepSession {
         this.awakeMinutes = awakeMinutes;
         this.lightMinutes = lightMinutes;
         this.deepMinutes = deepMinutes;
-        this.remMinutes = remMinutes;
+        this.remMinutes = remMinutes;       
         this.averageHeartRate = averageHeartRate;
         this.averageMovement = averageMovement;
+        this.spo2 = spo2;
+        this.skinTemperature = skinTemperature;
         this.deltaPower = deltaPower;
         this.thetaPower = thetaPower;
         this.alphaPower = alphaPower;
@@ -66,4 +71,6 @@ public class SleepSession {
     public double getAlphaPower() { return alphaPower; }
     public double getBetaPower() { return betaPower; }
     public int getQualityScore() { return qualityScore; }
+    public double getSpo2() {return spo2;}
+    public double getSkinTemperature(){return skinTemperature;}
 }

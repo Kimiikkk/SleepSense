@@ -401,6 +401,62 @@
 
         </section>
 
+                <!-- SPO2 -->
+
+        <div class="card">
+
+            <div class="card-head">
+
+                <div>
+
+                    <h2>
+                        SpO₂
+                    </h2>
+
+                    <p>
+                        Simulated blood oxygen
+                    </p>
+
+                </div>
+
+                <strong class="metric"
+                        th:text="${#numbers.formatDecimal(sleepSession.spo2, 1, 1) + '%'}">
+                    97.5%
+                </strong>
+
+            </div>
+
+        </div>
+
+                <!-- SKIN TEMPERATURE -->
+
+        <div class="card">
+
+            <div class="card-head">
+
+                <div>
+
+                    <h2>
+                        Skin Temperature
+                    </h2>
+
+                    <p>
+                        Simulated body surface temperature
+                    </p>
+
+                </div>
+
+                <strong class="metric"
+                        th:text="${#numbers.formatDecimal(sleepSession.skinTemperature, 1, 1) + ' °C'}">
+                    36.5 °C
+                </strong>
+
+            </div>
+
+            
+
+        </div>
+
 
         <!-- ================= AI ASSISTANT ================= -->
 
@@ -547,7 +603,11 @@ const sleepSession = {
 
     beta: /*[[${sleepSession.betaPower}]]*/ 0.09,
 
-    movement: /*[[${sleepSession.averageMovement}]]*/ 0.22
+    movement: /*[[${sleepSession.averageMovement}]]*/ 0.22,
+
+    spo2: /*[[${sleepSession.spo2}]]*/ 97.5,
+
+    skinTemperature: /*[[${sleepSession.skinTemperature}]]*/ 36.5
 
 };
 

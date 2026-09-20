@@ -43,6 +43,9 @@ public class DummyDataService {
         double movement;
         int hr;
 
+        double spo2;
+        double skinTemperature;
+
         double delta;
         double theta;
         double alpha;
@@ -74,6 +77,10 @@ public class DummyDataService {
             alpha = 0.07 + random.nextDouble() * 0.08;
 
             beta = 0.04 + random.nextDouble() * 0.06;
+
+            spo2 = 97.0 + random.nextDouble() * 2.0;
+
+            skinTemperature = 36.2 + random.nextDouble() * 0.5;
         }
 
 
@@ -102,6 +109,11 @@ public class DummyDataService {
             alpha = 0.08 + random.nextDouble() * 0.12;
 
             beta = 0.05 + random.nextDouble() * 0.10;
+
+            spo2 = 96.0 + random.nextDouble() * 2.5;
+
+            skinTemperature = 36.0 + random.nextDouble() * 0.7;
+            
         }
 
 
@@ -130,6 +142,10 @@ public class DummyDataService {
             alpha = 0.12 + random.nextDouble() * 0.12;
 
             beta = 0.08 + random.nextDouble() * 0.12;
+
+            spo2 = 95.0 + random.nextDouble() * 2.5;
+
+            skinTemperature = 35.8 + random.nextDouble() * 1.0;     
         }
 
 
@@ -186,6 +202,8 @@ public class DummyDataService {
                         rem,
                         hr,
                         movement,
+                        spo2,
+                skinTemperature,
                         delta,
                         theta,
                         alpha,
