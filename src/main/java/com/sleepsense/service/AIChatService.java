@@ -1241,6 +1241,8 @@ public class AIChatService {
                 remPercent,
                 s.getAverageHeartRate(),
                 s.getAverageMovement(),
+                s.getSpo2(),
+                s.getSkinTemperature(),
                 s.getDeltaPower(),
                 s.getThetaPower(),
                 s.getAlphaPower(),

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T12:11:19Z",
+  "title": "Design System: SleepSense",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {"role":"neutral","displayName":"Midnight Canvas","canonical":"#030508","tonalRamp":["#090b0e","#1e2227","#363b40","#51565b","#6d7278","#8a9096","#a9afb5","#edeef0"]},
+      "rail": {"role":"neutral","displayName":"Navigation Rail","canonical":"#05070b","tonalRamp":["#0a0b0e","#1f2227","#373b40","#52555b","#6e7278","#8b8f96","#aaaeb5","#edeef0"]},
+      "surface": {"role":"neutral","displayName":"Signal Surface","canonical":"#090c12","tonalRamp":["#090b0f","#1e2228","#373b42","#51555d","#6d727a","#8b8f98","#a9aeb7","#edeef0"]},
+      "surface-raised": {"role":"neutral","displayName":"Raised Surface","canonical":"#0e1219","tonalRamp":["#090b0f","#1d2229","#363b43","#50565e","#6c727b","#8a8f99","#a8aeb8","#edeef1"]},
+      "surface-inset": {"role":"neutral","displayName":"Inset Surface","canonical":"#05070a","tonalRamp":["#0a0b0d","#1f2226","#373b3f","#52565a","#6e7277","#8b9095","#aaaeb3","#eeeef0"]},
+      "line": {"role":"neutral","displayName":"Hairline","canonical":"#252d38","tonalRamp":["#080b11","#1a222d","#333b47","#4d5662","#69727f","#86909d","#a5afbd","#eceff2"]},
+      "text": {"role":"neutral","displayName":"Primary Text","canonical":"#f1f4f8","tonalRamp":["#0a0b0d","#202225","#383b3e","#535559","#6f7275","#8d8f93","#abaeb2","#eeeeef"]},
+      "text-soft": {"role":"neutral","displayName":"Soft Text","canonical":"#bdc7d2","tonalRamp":["#080c10","#1b222b","#333b44","#4e5660","#6a737d","#87909b","#a5afba","#edeff1"]},
+      "muted": {"role":"neutral","displayName":"Muted Text","canonical":"#929eac","tonalRamp":["#070c11","#19222d","#313c47","#4c5663","#677380","#85909e","#a3afbe","#eceff2"]},
+      "dim": {"role":"neutral","displayName":"Dim Text","canonical":"#748190","tonalRamp":["#060c12","#18232f","#303c49","#4a5765","#667382","#8391a0","#a2b0bf","#eceff2"]},
+      "mint": {"role":"accent","displayName":"Cool Mint","canonical":"#66d8df","tonalRamp":["#001116","#002d35","#004950","#00656d","#00838a","#22a2a9","#4dc2c9","#dff3f4"]},
+      "ice": {"role":"accent","displayName":"Ice Blue","canonical":"#73d8e3","tonalRamp":["#001116","#002c37","#004752","#00646e","#00818c","#35a0ab","#59c0ca","#e1f3f4"]},
+      "lilac": {"role":"accent","displayName":"Aurora Lilac","canonical":"#a493ff","tonalRamp":["#0e002e","#270064","#3d2083","#563fa3","#715ec4","#8e7ce6","#ac9bff","#edecff"]},
+      "rose": {"role":"signal","displayName":"Sleep Quality Rose","canonical":"#e58ad2","tonalRamp":["#1e0019","#45003b","#630d57","#822f74","#a24d92","#c36bb1","#e48ad1","#fbe8f6"]},
+      "cyan": {"role":"signal","displayName":"Deep Sleep Cyan","canonical":"#69d7e3","tonalRamp":["#001117","#002d38","#004853","#006470","#00828e","#28a1ad","#51c1cc","#e0f3f5"]},
+      "violet": {"role":"signal","displayName":"REM Violet","canonical":"#b597ff","tonalRamp":["#11002b","#2c005e","#441f7d","#5e3d9d","#7b5bbd","#987adf","#b799ff","#f0ebff"]},
+      "amber": {"role":"notice","displayName":"Prototype Amber","canonical":"#d4af7c","tonalRamp":["#160700","#371900","#523300","#6f4e1b","#8d6b39","#ac8856","#cca774","#f5ede3"]},
+      "awake": {"role":"stage","displayName":"Awake Gray","canonical":"#737d8b","tonalRamp":["#070b11","#1a222d","#323b47","#4d5663","#697280","#86909e","#a4afbe","#eceff2"]},
+      "light-sleep": {"role":"stage","displayName":"Light Sleep Blue","canonical":"#8da9c7","tonalRamp":["#020c18","#0b233a","#243c56","#3e5872","#5a7490","#7792af","#95b1cf","#e9eff6"]},
+      "deep-sleep": {"role":"stage","displayName":"Deep Sleep Cyan","canonical":"#64d4df","tonalRamp":["#001117","#002d38","#004853","#00656f","#00828d","#25a1ac","#4fc1cc","#dff3f5"]},
+      "rem-sleep": {"role":"stage","displayName":"REM Orchid","canonical":"#c779d4","tonalRamp":["#1b0021","#3f004b","#5c0d68","#7a3087","#994ea6","#b96cc6","#da8be7","#f9e8fb"]}
+    },
+    "typographyMeta": {
+      "display": {"displayName":"Night Display","purpose":"Dashboard welcome heading; keep it brief and calm."},
+      "body": {"displayName":"Instrument UI","purpose":"Compact labels and readings across sleep cards and charts."}
+    },
+    "shadows": [
+      {"name":"surface-depth","value":"0 18px 48px rgba(0,0,0,.22)","purpose":"Soft separation for account and dialog surfaces."},
+      {"name":"signal-hover","value":"inset 0 1px rgba(255,255,255,.08), 0 13px 35px rgba(var(--card-rgb),.08)","purpose":"Quiet lift on an interactive signal card."}
+    ],
+    "motion": [
+      {"name":"signal-reveal","value":"620ms cubic-bezier(.16,1,.3,1)","purpose":"Short section reveal with reduced-motion override."},
+      {"name":"night-refresh","value":"850ms cubic-bezier(.16,1,.3,1)","purpose":"Bring updated simulated readings into view."},
+      {"name":"orbit","value":"6s linear infinite","purpose":"Slow orbit during the night-generation sequence."}
+    ],
+    "breakpoints": [
+      {"name":"tablet","value":"800px"},
+      {"name":"phone","value":"600px"},
+      {"name":"narrow-phone","value":"390px"}
+    ]
+  },
+  "components": [
+    {"name":"Primary Button","kind":"button","refersTo":"button-primary","description":"Cyan action for the next clear step.","html":"<button class=\"ds-button-primary\" type=\"button\">Continue</button>","css":".ds-button-primary{min-height:39px;padding:0 14px;border:1px solid #66d8df;border-radius:8px;background:#66d8df;color:#0c1715;font:600 10px Sora,sans-serif;transition:background .18s ease,transform .18s ease}.ds-button-primary:hover{background:#94ddcd;transform:translateY(-1px)}.ds-button-primary:focus-visible{outline:2px solid #66d8df;outline-offset:3px}.ds-button-primary:active{transform:scale(.98)}"},
+    {"name":"Secondary Button","kind":"button","description":"Quiet outlined action for dashboard-level work.","html":"<button class=\"ds-button-secondary\" type=\"button\">Generate a new night</button>","css":".ds-button-secondary{min-height:42px;padding:0 18px;border:1px solid rgba(137,177,255,.38);border-radius:99px;background:linear-gradient(110deg,rgba(43,92,183,.48),rgba(16,22,38,.76));color:#ecf3ff;font:600 10px Sora,sans-serif;transition:border-color .18s ease,background .18s ease,transform .18s ease}.ds-button-secondary:hover{border-color:#a5c2ff;background:#192744;transform:translateY(-1px)}.ds-button-secondary:focus-visible{outline:2px solid #66d8df;outline-offset:3px}"},
+    {"name":"Text Input","kind":"input","description":"Dark field with a clear keyboard focus treatment.","html":"<label class=\"ds-field\">Ask about your sleep<input type=\"text\" placeholder=\"Ask about your sleep…\"></label>","css":".ds-field{display:grid;gap:7px;color:#bdc7d2;font:600 10px Sora,sans-serif}.ds-field input{min-height:43px;padding:0 12px;border:1px solid #33414e;border-radius:8px;background:#0f1821;color:#f1f4f8;font:400 12px Sora,sans-serif}.ds-field input::placeholder{color:#929eac}.ds-field input:focus-visible{border-color:#66d8df;outline:2px solid rgba(102,216,223,.35);outline-offset:2px}"},
+    {"name":"Navigation Link","kind":"nav","description":"Pill-shaped selected state in the horizontal dashboard navigation.","html":"<a class=\"ds-nav-link ds-nav-link-active\" href=\"#overview\" aria-current=\"page\"><span>Overview</span></a>","css":".ds-nav-link{display:inline-flex;min-height:37px;align-items:center;padding:0 11px;border:1px solid transparent;border-radius:99px;color:#929cb0;background:transparent;font:550 10px Sora,sans-serif;text-decoration:none;transition:background .18s ease,color .18s ease,border-color .18s ease}.ds-nav-link:hover{color:#f1f4f8;background:rgba(255,255,255,.035)}.ds-nav-link-active{border-color:rgba(123,164,255,.27);color:#e2ebff;background:rgba(57,96,168,.17)}.ds-nav-link:focus-visible{outline:2px solid #66d8df;outline-offset:3px}"},
+    {"name":"Sleep Quality Card","kind":"card","refersTo":"signal-card","description":"Rose-marked score with a matching circular readout and meter.","html":"<article class=\"ds-signal-card\"><div><h3>Sleep quality</h3><strong>88 <small>/ 100</small></strong><p>Simulated score</p><span class=\"ds-meter\"><i></i></span></div><span class=\"ds-ring\" aria-hidden=\"true\"></span></article>","css":".ds-signal-card{display:flex;min-height:151px;align-items:center;justify-content:space-between;gap:14px;padding:18px;border:1px solid rgba(229,138,210,.57);border-radius:13px;background:linear-gradient(145deg,rgba(229,138,210,.095),#080a11 61%);color:#f1f4f8;font-family:Sora,sans-serif}.ds-signal-card h3{margin:0 0 8px;color:#e58ad2;font-size:13px}.ds-signal-card strong{font-size:25px;font-variant-numeric:tabular-nums}.ds-signal-card small,.ds-signal-card p{color:#bdc7d2;font-size:10px}.ds-meter{display:block;width:180px;height:4px;border-radius:99px;background:#252d38}.ds-meter i{display:block;width:88%;height:100%;border-radius:inherit;background:#e58ad2}.ds-ring{width:62px;height:62px;border:4px solid #e58ad2;border-radius:50%;box-shadow:0 0 18px rgba(229,138,210,.18)}"},
+    {"name":"Sleep Stage Timeline","kind":"custom","description":"Proportional stage bar paired with a text legend.","html":"<section class=\"ds-timeline\" aria-label=\"Sleep stages\"><div class=\"ds-stage-bar\"><i class=\"ds-awake\"></i><i class=\"ds-light\"></i><i class=\"ds-deep\"></i><i class=\"ds-rem\"></i></div><p>Awake 35m · Light 4h 20m · Deep 1h 30m · REM 1h 20m</p></section>","css":".ds-timeline{padding:18px;border:1px solid #252d38;border-radius:12px;background:#090c12;color:#bdc7d2;font:400 10px/1.5 Sora,sans-serif}.ds-stage-bar{display:flex;height:14px;gap:2px;overflow:hidden;border-radius:5px;background:#1a2631}.ds-stage-bar i{display:block;min-width:2px}.ds-awake{flex:35;background:#737d8b}.ds-light{flex:260;background:#8da9c7}.ds-deep{flex:90;background:#64d4df}.ds-rem{flex:80;background:#c779d4}.ds-timeline p{margin:14px 0 0}"},
+    {"name":"Prototype Notice","kind":"chip","description":"Amber disclosure that keeps simulation status in view.","html":"<aside class=\"ds-prototype-notice\"><strong>Prototype readings</strong><span>All wearable measurements shown here are simulated.</span><b>DEMO MODE</b></aside>","css":".ds-prototype-notice{display:flex;min-height:48px;align-items:center;gap:10px;padding:9px 12px;border:1px solid rgba(212,175,124,.23);border-radius:8px;background:rgba(18,16,15,.69);color:#ddc397;font:400 10px/1.45 Sora,sans-serif}.ds-prototype-notice strong{font-weight:650}.ds-prototype-notice span{color:#b7a88f}.ds-prototype-notice b{margin-left:auto;color:#b59667;font-size:8px;letter-spacing:1px;white-space:nowrap}"}
+  ],
+  "narrative": {
+    "northStar": "Quiet Sleep Instrument",
+    "overview": "SleepSense should feel calm and precise in a dark room, with a dreamlike midnight atmosphere around information that remains easy to read. The interface is a personal review tool for simulated sleep data; it must never suggest clinical certainty or hide that readings are simulated.\n\nBlue-violet light creates the night field. Rose marks sleep quality, cyan marks deep sleep and session timing, and violet marks REM and movement. Keep that color mapping stable so the charts, rings, and summary cards teach the same visual language.",
+    "keyCharacteristics": ["Near-black OLED surfaces with a blue-violet aurora.","Compact signal cards with fine outlines and restrained glow.","Clear simulated-data labels and legible sleep-stage colors.","Short, purposeful motion that never blocks scrolling or interaction."],
+    "rules": [{"name":"The Signal-Color Rule","body":"Reuse the established rose, cyan, and violet roles; do not assign a new accent to an existing sleep measure.","section":"colors"},{"name":"The Simulation Rule","body":"Keep simulated status visible near the data and never describe prototype readings as measured health data.","section":"colors"}],
+    "dos": ["Do keep sleep values and their units visible at a glance.","Do retain the midnight aurora while giving the data more visual weight than the atmosphere.","Do keep simulated status beside readings and chart history.","Do preserve keyboard focus, reduced-motion behavior, and touch-friendly controls."],
+    "donts": ["Don't use fitness labels or imply a medical diagnosis.","Don't add decorative badges, extra accent colors, or large empty hero space that pushes the session below the fold.","Don't use a section eyebrow where a clear heading already provides context."]
+  }
+}

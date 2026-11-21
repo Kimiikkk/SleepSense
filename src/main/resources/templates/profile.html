@@ -1,376 +1,69 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org">
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>SleepSense — Profile</title>
-
-    <link rel="stylesheet"
-          href="/css/app.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1118">
+  <title>SleepSense — Profile</title>
+  <link rel="stylesheet" href="/css/app.css">
 </head>
-
-
-<body>
-
-<div class="app">
-
-    <!-- ================= SIDEBAR ================= -->
-
-    <aside class="sidebar">
-
-        <div class="logo">
-            <span>S</span>
-            <strong>SleepSense</strong>
-        </div>
-
-
-        <nav>
-
-            <a href="/dashboard">
-                Dashboard
-            </a>
-
-            <a href="/dashboard#sessions">
-                Sleep Sessions
-            </a>
-
-            <a href="/dashboard#analysis">
-                Sleep Analysis
-            </a>
-
-            <a href="/dashboard#reports">
-                Reports
-            </a>
-
-            <a href="/dashboard#assistant">
-                AI Assistant
-            </a>
-
-            <a class="active"
-               href="/profile">
-                Profile
-            </a>
-
-        </nav>
-
-
-        <div class="sidebar-bottom">
-
-            <span class="prototype-badge">
-                SIMULATED DATA
-            </span>
-
-
-            <form method="post"
-                  action="/logout">
-
-                <input type="hidden"
-                       th:name="${_csrf.parameterName}"
-                       th:value="${_csrf.token}">
-
-                <button class="logout"
-                        type="submit">
-
-                    Log out
-
-                </button>
-
-            </form>
-
-        </div>
-
-    </aside>
-
-
-    <!-- ================= MAIN ================= -->
-
-    <main class="main">
-
-
-        <!-- TOP BAR -->
-
-        <header class="topbar">
-
-            <div>
-
-                <p class="eyebrow">
-                    Account
-                </p>
-
-                <h1>
-                    Your Profile
-                </h1>
-
-            </div>
-
-
-            <a href="/dashboard"
-               class="secondary profile-back">
-
-                Back to dashboard
-
-            </a>
-
-        </header>
-
-
-        <!-- ================= PROFILE HERO ================= -->
-
-        <section class="profile-hero card">
-
-            <div class="profile-avatar">
-
-                <span
-                    th:text="${#strings.substring(user.fullName, 0, 1).toUpperCase()}">
-                    K
-                </span>
-
-            </div>
-
-
-            <div class="profile-hero-info">
-
-                <span class="ai-label">
-                    SLEEP SENSE USER
-                </span>
-
-                <h2 th:text="${user.fullName}">
-                    Krish
-                </h2>
-
-                <p>
-                    Your personal SleepSense account
-                </p>
-
-            </div>
-
+<body class="profile-page">
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" href="/dashboard" aria-label="SleepSense home"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M21.9 5.6a11.3 11.3 0 1 0 4.5 20.8A12.7 12.7 0 0 1 21.9 5.6Z"/><path d="M21.5 7.1v5.2m-2.6-2.6h5.2"/></svg></span><span class="brand-name">sleep<span>sense</span></span></a>
+    <div class="nav-caption">WORKSPACE</div>
+    <nav class="primary-nav">
+      <a class="nav-link" href="/dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4" rx="1.5"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Overview</span></a>
+      <a class="nav-link" href="/dashboard#sessions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2.5-6 4.2 12 2.6-6h3.7"/><path d="M4 4.5h16v15H4z"/></svg><span>Sleep session</span></a>
+      <a class="nav-link" href="/dashboard#analysis"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V12m5 7.5V5m5 14.5v-10m5 10V8"/><path d="M2.5 21h19"/></svg><span>Signals</span></a>
+      <a class="nav-link" href="/dashboard#reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6m-6 3.5h6"/></svg><span>Report</span></a>
+    </nav>
+    <div class="nav-caption nav-caption-tools">PERSONAL</div>
+    <nav class="primary-nav">
+      <a class="nav-link" href="/dashboard#assistant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.1 13.2l-.8 3.8 3.8-.9A8.5 8.5 0 1 0 12 3.5Z"/><path d="M8.5 12h7m-7-3h4m-4 6h5"/></svg><span>AI assistant</span></a>
+      <a class="nav-link active" href="/profile" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg><span>My profile</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="device-status"><span class="status-indicator"></span><span><strong>SleepSense</strong><small>Prototype device</small></span><span class="status-menu" aria-hidden="true">···</span></div>
+      <span class="simulation-label"><span></span> SIMULATED READINGS</span>
+      <form method="post" action="/logout"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="logout-button" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5m4-4 4-4-4-4m4 4H9"/></svg><span>Log out</span></button></form>
+    </div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar"><div class="breadcrumb"><span>Personal</span><span class="breadcrumb-divider">/</span><strong>My profile</strong></div><div class="topbar-actions"><a class="button button-secondary profile-back" href="/dashboard">Back to overview</a></div></header>
+    <div class="page-content">
+      <section class="welcome-row"><div><p class="date-line">ACCOUNT</p><h1>Your profile</h1><p class="welcome-copy">Personal details and SleepSense information.</p></div></section>
+      <div class="profile-layout">
+        <section class="profile-hero">
+          <div class="profile-avatar"><span th:text="${#strings.substring(user.fullName, 0, 1).toUpperCase()}">K</span></div>
+          <div class="profile-hero-info"><p class="section-kicker">SLEEPSENSE ACCOUNT</p><h2 th:text="${user.fullName}">Krish</h2><p>Your personal SleepSense profile</p></div>
         </section>
-
-
-        <!-- ================= PERSONAL INFORMATION ================= -->
-
-        <section class="card profile-section">
-
-            <div class="card-head">
-
-                <div>
-
-                    <h2>
-                        Personal information
-                    </h2>
-
-                    <p>
-                        Information associated with your account.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="profile-grid">
-
-
-                <div class="profile-field">
-
-                    <span>
-                        Full name
-                    </span>
-
-                    <strong
-                        th:text="${user.fullName}">
-                        Krish
-                    </strong>
-
-                </div>
-
-
-                <div class="profile-field">
-
-                    <span>
-                        Email address
-                    </span>
-
-                    <strong
-                        th:text="${user.email}">
-                        krish@example.com
-                    </strong>
-
-                </div>
-
-
-                <div class="profile-field">
-
-                    <span>
-                        Age
-                    </span>
-
-                    <strong
-                        th:text="${user.age}">
-                        20
-                    </strong>
-
-                </div>
-
-
-                <div class="profile-field">
-
-                    <span>
-                        Account type
-                    </span>
-
-                    <strong>
-                        SleepSense User
-                    </strong>
-
-                </div>
-
-
-            </div>
-
+        <section class="profile-section">
+          <h2>Personal information</h2><p class="section-note">Information associated with your account.</p>
+          <div class="profile-grid">
+            <div class="profile-field"><span>Full name</span><strong th:text="${user.fullName}">Krish</strong></div>
+            <div class="profile-field"><span>Email address</span><strong th:text="${user.email}">krish@example.com</strong></div>
+            <div class="profile-field"><span>Age</span><strong th:text="${user.age}">20</strong></div>
+            <div class="profile-field"><span>Account type</span><strong>SleepSense User</strong></div>
+          </div>
         </section>
-
-
-        <!-- ================= PROJECT INFORMATION ================= -->
-
-        <section class="card profile-section">
-
-            <div class="card-head">
-
-                <div>
-
-                    <h2>
-                        About SleepSense
-                    </h2>
-
-                    <p>
-                        Your wearable sleep-monitoring prototype.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="about-profile">
-
-                <div class="about-item">
-
-                    <strong>
-                        Sleep monitoring
-                    </strong>
-
-                    <span>
-                        Tracks simulated sleep stages,
-                        duration, and sleep quality.
-                    </span>
-
-                </div>
-
-
-                <div class="about-item">
-
-                    <strong>
-                        EEG analysis
-                    </strong>
-
-                    <span>
-                        Displays simulated Delta, Theta,
-                        Alpha, and Beta activity.
-                    </span>
-
-                </div>
-
-
-                <div class="about-item">
-
-                    <strong>
-                        AI sleep assistant
-                    </strong>
-
-                    <span>
-                        Provides general explanations
-                        and sleep-hygiene suggestions.
-                    </span>
-
-                </div>
-
-
-                <div class="about-item">
-
-                    <strong>
-                        Prototype status
-                    </strong>
-
-                    <span>
-                        All wearable readings are
-                        currently simulated.
-                    </span>
-
-                </div>
-
-            </div>
-
+        <section class="profile-section">
+          <h2>About SleepSense</h2><p class="section-note">Your wearable sleep-monitoring prototype.</p>
+          <div class="about-profile">
+            <div class="about-item"><strong>Sleep monitoring</strong><span>Tracks simulated sleep stages, duration, and sleep quality.</span></div>
+            <div class="about-item"><strong>EEG analysis</strong><span>Displays simulated Delta, Theta, Alpha, and Beta activity.</span></div>
+            <div class="about-item"><strong>AI sleep assistant</strong><span>Provides general explanations and sleep-hygiene suggestions.</span></div>
+            <div class="about-item"><strong>Prototype status</strong><span>All wearable readings are currently simulated.</span></div>
+          </div>
         </section>
-
-
-        <!-- ================= SECURITY ================= -->
-
-        <section class="card profile-section">
-
-            <div class="card-head">
-
-                <div>
-
-                    <h2>
-                        Account
-                    </h2>
-
-                    <p>
-                        Manage your SleepSense session.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <form method="post"
-                  action="/logout">
-
-                <input type="hidden"
-                       th:name="${_csrf.parameterName}"
-                       th:value="${_csrf.token}">
-
-                <button class="primary"
-                        type="submit">
-
-                    Log out
-
-                </button>
-
-            </form>
-
+        <section class="profile-section">
+          <h2>Account</h2><p class="section-note">Manage your SleepSense session.</p>
+          <form class="profile-actions" method="post" action="/logout"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-secondary" type="submit">Log out</button></form>
         </section>
-
-
-        <footer>
-
-            SleepSense v1.0.0 · Software prototype · Simulated data
-
-        </footer>
-
-
-    </main>
-
+      </div>
+      <footer class="page-footer"><span>SleepSense <span class="footer-divider">/</span> Software prototype</span><span>Wearable readings are simulated</span></footer>
+    </div>
+  </main>
 </div>
-
 </body>
 </html>
