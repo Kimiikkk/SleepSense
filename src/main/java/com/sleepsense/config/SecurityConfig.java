@@ -8,7 +8,9 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.MediaType;
 
 @Configuration
 public class SecurityConfig {
@@ -47,6 +49,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/", "/login", "/signup",
+                    "/api/auth/firebase",
                     "/css/**", "/js/**",
                     "/api/health"
                 ).permitAll()
@@ -64,6 +67,18 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .accessDeniedHandler((request, response, exception) -> {
+                    if ("/api/auth/firebase".equals(request.getRequestURI())) {
+                        response.setStatus(403);
+                        response.setCharacterEncoding("UTF-8");
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        response.getWriter().write("{\"message\":\"Your sign-in request expired. Refresh the page and try again.\"}");
+                    } else {
+                        new AccessDeniedHandlerImpl().handle(request, response, exception);
+                    }
+                })
             );
 
         return http.build();

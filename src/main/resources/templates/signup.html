@@ -14,7 +14,7 @@
       <span class="brand-name">sleep<span>sense</span></span>
     </a>
     <h1>Create your account</h1>
-    <p>Set up your personal SleepSense profile.</p>
+    <p>Create an account with your email and password. Google is optional.</p>
     <div class="error" role="alert" th:if="${error != null && !error.isEmpty()}" th:text="${error}"></div>
     <form method="post" action="/signup" class="form">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

@@ -1,12 +1,8 @@
 target/
-data/
 .vscode/
 
 *.class
 *.log
-*.db
-*.mv.db
-*.trace.db
 
 .env
 application-local.properties

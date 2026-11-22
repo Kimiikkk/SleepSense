@@ -43,7 +43,7 @@
           <div class="profile-grid">
             <div class="profile-field"><span>Full name</span><strong th:text="${user.fullName}">Krish</strong></div>
             <div class="profile-field"><span>Email address</span><strong th:text="${user.email}">krish@example.com</strong></div>
-            <div class="profile-field"><span>Age</span><strong th:text="${user.age}">20</strong></div>
+            <div class="profile-field"><span>Age</span><strong th:text="${user.age > 0 ? user.age : 'Not provided'}">20</strong></div>
             <div class="profile-field"><span>Account type</span><strong>SleepSense User</strong></div>
           </div>
         </section>

@@ -1,10 +1,33 @@
 package com.sleepsense.repository;
 
 import com.sleepsense.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.sleepsense.service.FirebaseDataService;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
-    boolean existsByEmail(String email);
+/** Firestore-backed user store. */
+@Repository
+public class UserRepository {
+    private final FirebaseDataService data;
+
+    public UserRepository(FirebaseDataService data) {
+        this.data = data;
+    }
+
+    public User save(User user) {
+        return data.saveUser(user);
+    }
+
+    public Optional<User> findByEmailIgnoreCase(String email) {
+        return data.findUserByEmail(email);
+    }
+
+    public Optional<User> findByFirebaseUid(String firebaseUid) {
+        return data.findUserByFirebaseUid(firebaseUid);
+    }
+
+    public boolean existsByEmailIgnoreCase(String email) {
+        return data.userExistsByEmail(email);
+    }
 }

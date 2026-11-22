@@ -14,8 +14,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        var user = users.findByEmail(email.toLowerCase().trim())
+        var user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            throw new UsernameNotFoundException("This account must use Google sign-in.");
+        }
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPasswordHash())
