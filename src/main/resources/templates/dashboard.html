@@ -36,7 +36,7 @@
 
     <div class="nav-caption">WORKSPACE</div>
     <nav class="primary-nav">
-      <a class="nav-link active" href="/dashboard" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4" rx="1.5"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Overview</span></a>
+      <a class="nav-link active" href="#overview" aria-current="location"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4" rx="1.5"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Overview</span></a>
       <a class="nav-link" href="#sessions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2.5-6 4.2 12 2.6-6h3.7"/><path d="M4 4.5h16v15H4z"/></svg><span>Sleep session</span></a>
       <a class="nav-link" href="#analysis"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V12m5 7.5V5m5 14.5v-10m5 10V8"/><path d="M2.5 21h19"/></svg><span>Signals</span></a>
       <a class="nav-link" href="#reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6m-6 3.5h6"/></svg><span>Report</span></a>
@@ -68,7 +68,7 @@
     </header>
 
     <div class="page-content">
-      <section class="welcome-row sleep-hero" data-scroll-reveal>
+      <section class="welcome-row sleep-hero" id="overview" data-scroll-reveal>
         <div class="hero-art" aria-hidden="true">
           <span class="hero-glow hero-glow-one"></span><span class="hero-glow hero-glow-two"></span>
           <svg viewBox="0 0 1200 340" preserveAspectRatio="none">
@@ -137,29 +137,29 @@
       </section>
 
       <section class="analysis-section" id="analysis">
-        <div class="section-heading section-heading-compact" id="reports" data-scroll-reveal>
+        <div class="section-heading section-heading-compact" data-scroll-reveal>
           <div><h2>Signals through the night</h2></div>
           <span class="section-note">All values are simulated</span>
         </div>
 
         <div class="chart-grid">
           <article class="chart-panel signal-cyan" data-scroll-reveal>
-            <div class="chart-head"><div><h3>Heart rate</h3><p>Average simulated BPM</p></div><div class="chart-reading"><strong th:text="${sleepSession.averageHeartRate}">61</strong><span>BPM AVG</span></div></div>
-            <div class="chart-canvas"><canvas id="hrChart" aria-label="Simulated heart rate over the night"></canvas></div>
+            <div class="chart-head"><div><h3>Heart rate</h3><p>Simulated live signal · last 15 seconds</p></div><div class="chart-reading"><strong th:text="${sleepSession.averageHeartRate}">61</strong><span>BPM NOW</span></div></div>
+            <div class="chart-canvas"><canvas id="hrChart" aria-label="Simulated heart rate streaming across the last 15 seconds"></canvas></div>
           </article>
           <article class="chart-panel signal-violet" data-scroll-reveal>
             <div class="chart-head"><div><h3>Brain-wave bands</h3><p>Relative power by night · simulated</p></div><span class="chart-units">EEG</span></div>
             <div class="chart-canvas"><canvas id="eegChart" aria-label="Simulated EEG delta, theta, alpha, and beta bands over recorded nights"></canvas></div>
           </article>
           <article class="chart-panel signal-pink" data-scroll-reveal>
-            <div class="chart-head"><div><h3>Movement</h3><p>Average simulated activity</p></div><div class="chart-reading"><strong th:text="${#numbers.formatDecimal(sleepSession.averageMovement * 100, 0, 0) + '%'}">22%</strong><span>AVERAGE</span></div></div>
-            <div class="chart-canvas"><canvas id="motionChart" aria-label="Simulated movement through the night"></canvas></div>
+            <div class="chart-head"><div><h3>Movement</h3><p>Simulated live signal · last 15 seconds</p></div><div class="chart-reading"><strong th:text="${#numbers.formatDecimal(sleepSession.averageMovement * 100, 0, 0) + '%'}">22%</strong><span>ACTIVITY NOW</span></div></div>
+            <div class="chart-canvas"><canvas id="motionChart" aria-label="Simulated movement streaming across the last 15 seconds"></canvas></div>
           </article>
           <article class="chart-panel signal-cyan" data-scroll-reveal>
             <div class="chart-head"><div><h3>Stage distribution</h3><p>Time in each sleep stage</p></div><span class="chart-units">SIMULATED MINUTES</span></div>
             <div class="chart-canvas"><canvas id="stageChart" aria-label="Simulated minutes in awake, light, deep, and REM sleep"></canvas></div>
           </article>
-          <article class="chart-panel signal-rose" data-scroll-reveal>
+          <article class="chart-panel signal-rose" id="reports" data-scroll-reveal>
             <div class="chart-head"><div><h3>Sleep score trend</h3><p>Across recorded nights</p></div><span class="chart-units" th:text="|${sleepSessions.size()} NIGHT${sleepSessions.size() == 1 ? '' : 'S'}|">1 NIGHT</span></div>
             <div class="chart-canvas"><canvas id="scoreChart" aria-label="Simulated sleep quality scores across recorded nights"></canvas></div>
           </article>
@@ -266,6 +266,41 @@ if (!reducedMotion && 'IntersectionObserver' in window) {
   revealTargets.forEach(target => target.classList.add('is-revealed'));
 }
 
+const scrollNavItems = [...document.querySelectorAll('.dashboard-page .nav-link[href^="#"]')]
+  .map(link => ({ link, target: document.querySelector(link.getAttribute('href')) }))
+  .filter(item => item.target);
+if (scrollNavItems.length) {
+  let scrollNavFrame = 0;
+  const updateScrollNavigation = () => {
+    scrollNavFrame = 0;
+    const activationLine = Math.min(210, Math.max(118, window.innerHeight * 0.22));
+    let currentItem = scrollNavItems[0];
+
+    for (const item of scrollNavItems) {
+      if (item.target.getBoundingClientRect().top <= activationLine) currentItem = item;
+      else break;
+    }
+    if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
+      currentItem = scrollNavItems[scrollNavItems.length - 1];
+    }
+
+    scrollNavItems.forEach(item => {
+      const isCurrent = item === currentItem;
+      item.link.classList.toggle('active', isCurrent);
+      if (isCurrent) item.link.setAttribute('aria-current', 'location');
+      else item.link.removeAttribute('aria-current');
+    });
+  };
+  const queueScrollNavigationUpdate = () => {
+    if (!scrollNavFrame) scrollNavFrame = window.requestAnimationFrame(updateScrollNavigation);
+  };
+
+  window.addEventListener('scroll', queueScrollNavigationUpdate, { passive: true });
+  window.addEventListener('resize', queueScrollNavigationUpdate);
+  window.addEventListener('hashchange', queueScrollNavigationUpdate);
+  updateScrollNavigation();
+}
+
 const sleepSession = {
   awake: /*[[${sleepSession.awakeMinutes}]]*/ 35,
   light: /*[[${sleepSession.lightMinutes}]]*/ 260,
@@ -321,7 +356,118 @@ const chartBase = {
   }
 };
 
-const hrChart = new Chart(document.getElementById('hrChart'), { type: 'line', data: { labels: sessionLabels, datasets: [{ data: [sleepSession.hr + 4, sleepSession.hr - 1, sleepSession.hr, sleepSession.hr - 3, sleepSession.hr + 1], borderColor: '#69d7e3', backgroundColor: 'rgba(105, 215, 227, .08)', fill: true, tension: .38, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#69d7e3' }] }, options: { ...chartBase, scales: { ...chartBase.scales, y: { ...chartBase.scales.y, suggestedMin: 45, suggestedMax: 80, ticks: { ...chartBase.scales.y.ticks, stepSize: 10 } } } } });
+let sleepPlaybackPosition = 0;
+let sleepPlaybackActive = false;
+const playbackTraceColors = {
+  hrChart: [105, 215, 227],
+  eegChart: [164, 147, 255],
+  motionChart: [164, 147, 255],
+  stageChart: [105, 215, 227],
+  scoreChart: [229, 138, 210]
+};
+const sleepPlaybackTrace = {
+  id: 'sleepPlaybackTrace',
+  afterDatasetsDraw(chart) {
+    if (!sleepPlaybackActive || reducedMotion || !chart.chartArea
+        || chart.canvas.id === 'hrChart' || chart.canvas.id === 'motionChart') return;
+    const { left, right, top, bottom } = chart.chartArea;
+    const width = right - left;
+    const height = bottom - top;
+    if (width <= 0 || height <= 0) return;
+
+    const rgb = playbackTraceColors[chart.canvas.id] || [142, 178, 255];
+    const tint = alpha => `rgba(${rgb.join(',')},${alpha})`;
+    const x = left + width * sleepPlaybackPosition;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, top, width, height);
+    ctx.clip();
+
+    const beam = Math.max(9, Math.min(18, width * 0.035));
+    const glow = ctx.createLinearGradient(x - beam, 0, x + beam, 0);
+    glow.addColorStop(0, tint(0));
+    glow.addColorStop(0.5, tint(0.075));
+    glow.addColorStop(1, tint(0));
+    ctx.fillStyle = glow;
+    ctx.fillRect(left, top, width, height);
+
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.strokeStyle = tint(0.28);
+    ctx.lineWidth = 0.8;
+    ctx.shadowColor = tint(0.45);
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    chart.getSortedVisibleDatasetMetas()
+      .filter(meta => meta.type === 'line' && meta.data.length > 1)
+      .forEach(meta => {
+        const pointPosition = sleepPlaybackPosition * (meta.data.length - 1);
+        const startIndex = Math.floor(pointPosition);
+        const endIndex = Math.min(meta.data.length - 1, startIndex + 1);
+        const mix = pointPosition - startIndex;
+        const start = meta.data[startIndex];
+        const end = meta.data[endIndex];
+        const pointX = start.x + (end.x - start.x) * mix;
+        const pointY = start.y + (end.y - start.y) * mix;
+        const datasetColor = chart.data.datasets[meta.index]?.borderColor;
+        const dotColor = typeof datasetColor === 'string' ? datasetColor : tint(0.95);
+
+        ctx.beginPath();
+        ctx.arc(pointX, pointY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = tint(0.2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pointX, pointY, 2, 0, Math.PI * 2);
+        ctx.fillStyle = dotColor;
+        ctx.shadowColor = dotColor;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+    ctx.restore();
+  }
+};
+Chart.register(sleepPlaybackTrace);
+
+const liveWindowMs = 15000;
+const liveSampleInterval = 500;
+const liveSampleCount = Math.round(liveWindowMs / liveSampleInterval) + 1;
+let liveGraphNow = performance.now();
+const clampSample = (value, min, max) => Math.max(min, Math.min(max, value));
+const createHeartRateWindow = (baseline, now = liveGraphNow) => Array.from({ length: liveSampleCount }, (_, index) => {
+  const seconds = index * liveSampleInterval / 1000;
+  const value = baseline + Math.sin(seconds * 1.15) * 2.6 + Math.sin(seconds * 0.34) * 1.1;
+  return { x: now - liveWindowMs + index * liveSampleInterval, y: clampSample(value, 45, 80) };
+});
+const createMovementWindow = (baseline, now = liveGraphNow) => Array.from({ length: liveSampleCount }, (_, index) => {
+  const seconds = index * liveSampleInterval / 1000;
+  const value = baseline + Math.sin(seconds * 0.9) * 0.045 + Math.sin(seconds * 0.31) * 0.025;
+  return { x: now - liveWindowMs + index * liveSampleInterval, y: clampSample(value, 0, 1) };
+});
+const liveTickLabel = value => {
+  const secondsAgo = Math.max(0, Math.round((liveGraphNow - Number(value)) / 1000));
+  return secondsAgo < 1 ? 'NOW' : `−${secondsAgo}s`;
+};
+const liveTooltipTitle = items => {
+  const pointTime = Number(items[0]?.raw?.x);
+  if (!Number.isFinite(pointTime)) return 'Live simulation';
+  const secondsAgo = Math.max(0, Math.round((liveGraphNow - pointTime) / 1000));
+  return secondsAgo < 1 ? 'Now' : `${secondsAgo}s ago`;
+};
+const liveTimeScale = () => ({
+  ...chartBase.scales.x,
+  type: 'linear',
+  min: liveGraphNow - liveWindowMs,
+  max: liveGraphNow,
+  ticks: { ...chartBase.scales.x.ticks, autoSkip: true, maxTicksLimit: 4, callback: liveTickLabel }
+});
+const liveChartAnimation = { duration: reducedMotion ? 0 : 360, easing: 'easeOutQuart' };
+const hrChart = new Chart(document.getElementById('hrChart'), { type: 'line', data: { datasets: [{ data: createHeartRateWindow(sleepSession.hr), borderColor: '#69d7e3', backgroundColor: 'rgba(105, 215, 227, .08)', fill: true, tension: .38, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#69d7e3' }] }, options: { ...chartBase, parsing: false, animation: liveChartAnimation, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: liveTooltipTitle, label: context => `${context.parsed.y.toFixed(1)} BPM · simulated` } } }, scales: { ...chartBase.scales, x: liveTimeScale(), y: { ...chartBase.scales.y, suggestedMin: 45, suggestedMax: 80, ticks: { ...chartBase.scales.y.ticks, stepSize: 10 } } } } });
 let historyPoints = [...document.querySelectorAll('#sessionHistoryData > span')].map(point => ({
   id: Number(point.dataset.id),
   date: point.dataset.date,
@@ -343,9 +489,97 @@ const eegChart = new Chart(document.getElementById('eegChart'), { type: 'line', 
   { label: 'Alpha', data: historyOrLatest.map(point => point.alpha), borderColor: '#a493ff', backgroundColor: '#a493ff', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5 },
   { label: 'Beta', data: historyOrLatest.map(point => point.beta), borderColor: '#e58ad2', backgroundColor: '#e58ad2', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5 }
 ] }, options: { ...chartBase, interaction: { mode: 'index', intersect: false }, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: historyTooltipTitle } }, legend: { display: true, position: 'top', align: 'end', labels: { color: '#aeb9c5', boxWidth: 7, boxHeight: 7, usePointStyle: true, pointStyle: 'circle', padding: 11, font: { size: 8 } } } }, scales: { ...chartBase.scales, x: { ...chartBase.scales.x, ticks: { ...chartBase.scales.x.ticks, autoSkip: true, maxTicksLimit: 6 } }, y: { ...chartBase.scales.y, max: 1, ticks: { ...chartBase.scales.y.ticks, stepSize: .25 } } } } });
-const motionChart = new Chart(document.getElementById('motionChart'), { type: 'line', data: { labels: sessionLabels, datasets: [{ data: [sleepSession.movement * .8, sleepSession.movement * .55, sleepSession.movement * .4, sleepSession.movement * 1.1, sleepSession.movement * 1.3], borderColor: '#a493ff', backgroundColor: 'rgba(164, 147, 255, .09)', fill: true, tension: .38, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 }] }, options: { ...chartBase, scales: { ...chartBase.scales, y: { ...chartBase.scales.y, max: 1, ticks: { ...chartBase.scales.y.ticks, stepSize: .25 } } } } });
+const motionChart = new Chart(document.getElementById('motionChart'), { type: 'line', data: { datasets: [{ data: createMovementWindow(sleepSession.movement), borderColor: '#a493ff', backgroundColor: 'rgba(164, 147, 255, .09)', fill: true, tension: .38, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 }] }, options: { ...chartBase, parsing: false, animation: liveChartAnimation, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: liveTooltipTitle, label: context => `Activity ${Math.round(context.parsed.y * 100)}% · simulated` } } }, scales: { ...chartBase.scales, x: liveTimeScale(), y: { ...chartBase.scales.y, max: 1, ticks: { ...chartBase.scales.y.ticks, stepSize: .25 } } } } });
 const stageChart = new Chart(document.getElementById('stageChart'), { type: 'bar', data: { labels: ['Awake', 'Light', 'Deep', 'REM'], datasets: [{ data: [sleepSession.awake, sleepSession.light, sleepSession.deep, sleepSession.rem], backgroundColor: ['#737d8b', '#8da9c7', '#69d7e3', '#b597ff'], borderRadius: 4, maxBarThickness: 22 }] }, options: { ...chartBase, indexAxis: 'y', plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { label: context => `${context.raw} min · ${Math.round(context.raw / sessionDuration * 100)}%` } } }, scales: { x: { ...chartBase.scales.x, grid: { color: chartGrid }, ticks: { ...chartBase.scales.x.ticks, callback: value => `${value}m` } }, y: { ...chartBase.scales.y, grid: { display: false }, ticks: { color: '#b8c4cf' } } } } });
 const scoreChart = new Chart(document.getElementById('scoreChart'), { type: 'line', data: { labels: historyPoints.length ? historyLabels : ['Latest night'], datasets: [{ label: 'Sleep quality', data: historyOrLatest.map(point => point.score), borderColor: '#e58ad2', backgroundColor: 'rgba(229, 138, 210, .10)', fill: true, tension: .32, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 2, pointHoverRadius: 5, pointBackgroundColor: '#e58ad2' }] }, options: { ...chartBase, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: historyTooltipTitle } } }, scales: { ...chartBase.scales, x: { ...chartBase.scales.x, ticks: { ...chartBase.scales.x.ticks, autoSkip: true, maxTicksLimit: 6 } }, y: { ...chartBase.scales.y, min: 0, max: 100, ticks: { ...chartBase.scales.y.ticks, stepSize: 25 } } } } });
+
+const liveHeartRateReadout = hrChart.canvas.closest('.chart-panel').querySelector('.chart-reading strong');
+const liveMovementReadout = motionChart.canvas.closest('.chart-panel').querySelector('.chart-reading strong');
+let liveHeartRateSamples = hrChart.data.datasets[0].data.slice();
+let liveMovementSamples = motionChart.data.datasets[0].data.slice();
+let liveSampleSequence = 0;
+let movementImpulse = 0;
+let lastHeartRateSampleAt = 0;
+let lastMovementSampleAt = 0;
+liveHeartRateReadout.textContent = String(Math.round(liveHeartRateSamples.at(-1).y));
+liveMovementReadout.textContent = `${Math.round(liveMovementSamples.at(-1).y * 100)}%`;
+
+const playbackCharts = [hrChart, eegChart, motionChart, stageChart, scoreChart];
+if (!reducedMotion && 'IntersectionObserver' in window) {
+  const visiblePlaybackCharts = new Set();
+  let playbackFrameId = 0;
+  let lastPlaybackPaint = 0;
+
+  const stopPlayback = () => {
+    sleepPlaybackActive = false;
+    if (playbackFrameId) window.cancelAnimationFrame(playbackFrameId);
+    playbackFrameId = 0;
+  };
+  const animatePlayback = now => {
+    playbackFrameId = 0;
+    if (document.hidden || visiblePlaybackCharts.size === 0) {
+      stopPlayback();
+      return;
+    }
+    if (now - lastPlaybackPaint >= 1000 / 30) {
+      sleepPlaybackPosition = (1 - Math.cos((2 * Math.PI * now) / 12000)) / 2;
+      visiblePlaybackCharts.forEach(chart => {
+        if (chart !== hrChart && chart !== motionChart) chart.draw();
+      });
+      lastPlaybackPaint = now;
+    }
+    const updateHeartRate = visiblePlaybackCharts.has(hrChart) && now - lastHeartRateSampleAt >= liveSampleInterval;
+    const updateMovement = visiblePlaybackCharts.has(motionChart) && now - lastMovementSampleAt >= liveSampleInterval;
+    if (updateHeartRate || updateMovement) {
+      liveSampleSequence += 1;
+      liveGraphNow = now;
+      if (updateHeartRate) {
+        advanceHeartRateSimulation(now);
+        lastHeartRateSampleAt = now;
+      }
+      if (updateMovement) {
+        advanceMovementSimulation(now);
+        lastMovementSampleAt = now;
+      }
+    }
+    playbackFrameId = window.requestAnimationFrame(animatePlayback);
+  };
+  const syncPlayback = () => {
+    const startupIsOpen = document.querySelector('.app-shell')?.inert;
+    if (document.hidden || startupIsOpen || visiblePlaybackCharts.size === 0) {
+      stopPlayback();
+      return;
+    }
+    const now = performance.now();
+    if (visiblePlaybackCharts.has(hrChart) && (!lastHeartRateSampleAt || now - lastHeartRateSampleAt > liveWindowMs)) {
+      liveGraphNow = now;
+      resetLiveSignalWindow(hrChart, now);
+      lastHeartRateSampleAt = now;
+    }
+    if (visiblePlaybackCharts.has(motionChart) && (!lastMovementSampleAt || now - lastMovementSampleAt > liveWindowMs)) {
+      liveGraphNow = now;
+      resetLiveSignalWindow(motionChart, now);
+      lastMovementSampleAt = now;
+    }
+    sleepPlaybackActive = true;
+    if (!playbackFrameId) playbackFrameId = window.requestAnimationFrame(animatePlayback);
+  };
+  const playbackObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const chart = playbackCharts.find(candidate => candidate.canvas === entry.target);
+      if (!chart) return;
+      if (entry.isIntersecting) visiblePlaybackCharts.add(chart);
+      else visiblePlaybackCharts.delete(chart);
+    });
+    syncPlayback();
+  }, { rootMargin: '48px 0px', threshold: 0.01 });
+  playbackCharts.forEach(chart => playbackObserver.observe(chart.canvas));
+  document.addEventListener('visibilitychange', syncPlayback);
+  const appShell = document.querySelector('.app-shell');
+  if (appShell) {
+    new MutationObserver(syncPlayback).observe(appShell, { attributes: true, attributeFilter: ['inert'] });
+  }
+}
 
 const generateForm = document.querySelector('.generate-form');
 const generateButton = document.getElementById('generateBtn');
@@ -369,6 +603,57 @@ function animateCount(element, target, suffix = '') {
     if (progress < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
+}
+
+function appendLivePoint(samples, value, now) {
+  const earliestVisiblePoint = now - liveWindowMs;
+  return [...samples.filter(point => point.x > earliestVisiblePoint), { x: now, y: value }];
+}
+
+function updateLiveChart(chart, samples, now) {
+  chart.data.datasets[0].data = samples;
+  chart.options.scales.x.min = now - liveWindowMs;
+  chart.options.scales.x.max = now;
+  chart.update();
+}
+
+function advanceHeartRateSimulation(now) {
+  const baseline = clampSample(Number(sleepSession.hr) || 60, 46, 78);
+  const wave = Math.sin(liveSampleSequence * 0.26) * 3.1 + Math.sin(liveSampleSequence * 0.075) * 1.1;
+  const next = clampSample(baseline + wave + (Math.random() - 0.5) * 0.55, 45, 80);
+  liveHeartRateSamples = appendLivePoint(liveHeartRateSamples, Number(next.toFixed(1)), now);
+  updateLiveChart(hrChart, liveHeartRateSamples, now);
+  liveHeartRateReadout.textContent = String(Math.round(next));
+}
+
+function advanceMovementSimulation(now) {
+  const rawBaseline = Number(sleepSession.movement);
+  const baseline = clampSample(Number.isFinite(rawBaseline) ? rawBaseline : 0.16, 0, 0.95);
+  if (Math.random() < 0.04) movementImpulse = Math.min(0.22, movementImpulse + 0.16);
+  movementImpulse *= 0.78;
+  const wave = Math.sin(liveSampleSequence * 0.38) * 0.055 + Math.sin(liveSampleSequence * 0.09) * 0.025;
+  const next = clampSample(baseline + wave + movementImpulse + (Math.random() - 0.5) * 0.018, 0, 1);
+  liveMovementSamples = appendLivePoint(liveMovementSamples, Number(next.toFixed(3)), now);
+  updateLiveChart(motionChart, liveMovementSamples, now);
+  liveMovementReadout.textContent = `${Math.round(next * 100)}%`;
+}
+
+function resetLiveSignalWindow(chart, now = performance.now()) {
+  liveGraphNow = now;
+  liveSampleSequence = 0;
+  if (chart === hrChart) {
+    const baseline = clampSample(Number(sleepSession.hr) || 60, 46, 78);
+    liveHeartRateSamples = createHeartRateWindow(baseline, now);
+    updateLiveChart(hrChart, liveHeartRateSamples, now);
+    liveHeartRateReadout.textContent = String(Math.round(liveHeartRateSamples.at(-1).y));
+  } else if (chart === motionChart) {
+    const rawBaseline = Number(sleepSession.movement);
+    const baseline = clampSample(Number.isFinite(rawBaseline) ? rawBaseline : 0.16, 0, 0.95);
+    movementImpulse = 0;
+    liveMovementSamples = createMovementWindow(baseline, now);
+    updateLiveChart(motionChart, liveMovementSamples, now);
+    liveMovementReadout.textContent = `${Math.round(liveMovementSamples.at(-1).y * 100)}%`;
+  }
 }
 
 function updateNight(payload) {
@@ -418,9 +703,6 @@ function updateNight(payload) {
     const minutes = [night.awakeMinutes, night.lightMinutes, night.deepMinutes, night.remMinutes][index];
     value.textContent = index === 0 ? `${minutes}m` : durationText(minutes);
   });
-  animateCount(document.querySelector('.chart-reading strong'), night.averageHeartRate);
-  document.querySelector('.chart-reading strong').nextElementSibling.textContent = 'BPM AVG';
-  document.querySelector('.chart-panel.signal-pink .chart-reading strong').textContent = `${Math.round(night.averageMovement * 100)}%`;
   document.querySelectorAll('.vital-reading strong')[0].textContent = `${night.spo2.toFixed(1)}%`;
   document.querySelectorAll('.vital-reading strong')[1].textContent = `${night.skinTemperature.toFixed(1)} °C`;
 
@@ -431,12 +713,23 @@ function updateNight(payload) {
   historyLabels = historyPoints.map(point => `#${point.id}`);
   historyOrLatest = historyPoints.length ? historyPoints : [{ date: 'Latest night', score: sleepSession.score, delta: sleepSession.delta, theta: sleepSession.theta, alpha: sleepSession.alpha, beta: sleepSession.beta }];
   const chartHistoryLabels = historyPoints.length ? historyLabels : ['Latest night'];
-  hrChart.data.labels = sessionLabels;
-  hrChart.data.datasets[0].data = [sleepSession.hr + 4, sleepSession.hr - 1, sleepSession.hr, sleepSession.hr - 3, sleepSession.hr + 1];
+  liveGraphNow = performance.now();
+  liveHeartRateSamples = createHeartRateWindow(sleepSession.hr, liveGraphNow);
+  hrChart.data.datasets[0].data = liveHeartRateSamples;
+  hrChart.options.scales.x.min = liveGraphNow - liveWindowMs;
+  hrChart.options.scales.x.max = liveGraphNow;
+  liveHeartRateReadout.textContent = String(Math.round(liveHeartRateSamples.at(-1).y));
   eegChart.data.labels = chartHistoryLabels;
   eegChart.data.datasets.forEach((dataset, index) => { dataset.data = historyOrLatest.map(point => [point.delta, point.theta, point.alpha, point.beta][index]); });
-  motionChart.data.labels = sessionLabels;
-  motionChart.data.datasets[0].data = [sleepSession.movement * .8, sleepSession.movement * .55, sleepSession.movement * .4, sleepSession.movement * 1.1, sleepSession.movement * 1.3];
+  liveMovementSamples = createMovementWindow(sleepSession.movement, liveGraphNow);
+  motionChart.data.datasets[0].data = liveMovementSamples;
+  motionChart.options.scales.x.min = liveGraphNow - liveWindowMs;
+  motionChart.options.scales.x.max = liveGraphNow;
+  liveMovementReadout.textContent = `${Math.round(liveMovementSamples.at(-1).y * 100)}%`;
+  liveSampleSequence = 0;
+  movementImpulse = 0;
+  lastHeartRateSampleAt = liveGraphNow;
+  lastMovementSampleAt = liveGraphNow;
   stageChart.data.datasets[0].data = [sleepSession.awake, sleepSession.light, sleepSession.deep, sleepSession.rem];
   scoreChart.data.labels = chartHistoryLabels;
   scoreChart.data.datasets[0].data = historyOrLatest.map(point => point.score);
