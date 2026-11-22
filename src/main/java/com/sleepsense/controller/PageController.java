@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -131,6 +132,61 @@ public class PageController {
         return "redirect:/login?registered";
     }
 
+    @GetMapping("/complete-profile")
+    public String completeProfile(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute(PENDING_GOOGLE_UID) == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("error", "");
+        return "complete-profile";
+    }
+
+    @PostMapping("/complete-profile")
+    public String saveCompletedProfile(@RequestParam int age, HttpServletRequest request,
+                                       HttpServletResponse response, Model model) {
+        HttpSession session = request.getSession(false);
+        Object pendingUid = session == null ? null : session.getAttribute(PENDING_GOOGLE_UID);
+        if (!(pendingUid instanceof String firebaseUid) || firebaseUid.isBlank()) {
+            return "redirect:/login";
+        }
+        if (age < 1 || age > 120) {
+            model.addAttribute("error", "Enter an age between 1 and 120.");
+            return "complete-profile";
+        }
+
+        User user;
+        try {
+            user = users.findByFirebaseUid(firebaseUid).orElse(null);
+        } catch (RuntimeException e) {
+            log.error("Google onboarding could not load the Firestore profile; cause type={}",
+                    e.getClass().getSimpleName());
+            model.addAttribute("error", "We could not load your profile just now. Please try again.");
+            return "complete-profile";
+        }
+        if (user == null) {
+            session.removeAttribute(PENDING_GOOGLE_UID);
+            return "redirect:/login";
+        }
+
+        if (!user.isOnboardingComplete()) {
+            user.setAge(age);
+            user.setOnboardingComplete(true);
+            try {
+                users.save(user);
+            } catch (RuntimeException e) {
+                log.error("Google onboarding could not save the Firestore profile; cause type={}",
+                        e.getClass().getSimpleName());
+                model.addAttribute("error", "We could not save your profile just now. Please try again.");
+                return "complete-profile";
+            }
+        }
+
+        session.removeAttribute(PENDING_GOOGLE_UID);
+        authenticateUser(user, request, response);
+        return "redirect:/dashboard";
+    }
+
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model) {
         User user = users.findByEmailIgnoreCase(auth.getName()).orElseThrow();
@@ -215,14 +271,18 @@ public class PageController {
         }
 
         try {
-            User user = firebaseSignIn.signInWithGoogle(body.idToken());
-            var authenticated = UsernamePasswordAuthenticationToken.authenticated(
-                    user.getEmail(), null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authenticated);
-            SecurityContextHolder.setContext(context);
-            if (request.getSession(false) != null) request.changeSessionId();
-            new HttpSessionSecurityContextRepository().saveContext(context, request, response);
+            FirebaseSignInService.GoogleSignInResult signIn = firebaseSignIn.signInWithGoogle(body.idToken());
+            User user = signIn.user();
+            if (signIn.needsAge()) {
+                HttpSession session = request.getSession(true);
+                request.changeSessionId();
+                session.setAttribute(PENDING_GOOGLE_UID, user.getFirebaseUid());
+                new HttpSessionSecurityContextRepository().saveContext(
+                        SecurityContextHolder.createEmptyContext(), request, response);
+                SecurityContextHolder.clearContext();
+                return ResponseEntity.ok(Map.of("redirect", "/complete-profile"));
+            }
+            authenticateUser(user, request, response);
             return ResponseEntity.ok(Map.of("redirect", "/dashboard"));
         } catch (ResponseStatusException e) {
             String message = e.getReason() == null ? "Google sign-in could not be verified." : e.getReason();
@@ -234,6 +294,20 @@ public class PageController {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of("message", firebasePersistenceFailure(e)));
         }
+    }
+
+    private static final String PENDING_GOOGLE_UID = "pendingGoogleUid";
+
+    private void authenticateUser(User user, HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(true);
+        session.removeAttribute(PENDING_GOOGLE_UID);
+        request.changeSessionId();
+        var authenticated = UsernamePasswordAuthenticationToken.authenticated(
+                user.getEmail(), null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authenticated);
+        SecurityContextHolder.setContext(context);
+        new HttpSessionSecurityContextRepository().saveContext(context, request, response);
     }
 
     private String firebasePersistenceFailure(Throwable failure) {

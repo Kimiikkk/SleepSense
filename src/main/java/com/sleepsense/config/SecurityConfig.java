@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.http.MediaType;
+import jakarta.servlet.http.HttpSession;
 
 @Configuration
 public class SecurityConfig {
@@ -49,6 +50,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/", "/login", "/signup",
+                    "/complete-profile",
                     "/api/auth/firebase",
                     "/css/**", "/js/**",
                     "/api/health"
@@ -60,7 +62,11 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .usernameParameter("username")
                 .passwordParameter("password")
-                .defaultSuccessUrl("/dashboard", true)
+                .successHandler((request, response, authentication) -> {
+                    HttpSession session = request.getSession(false);
+                    if (session != null) session.removeAttribute("pendingGoogleUid");
+                    response.sendRedirect("/dashboard");
+                })
                 .failureUrl("/login?error")
                 .permitAll()
             )

@@ -11,6 +11,7 @@ public class User {
     private String firebaseUid;
     private String passwordHash;
     private int age;
+    private boolean onboardingComplete = true;
 
     public User() {
         this.id = UUID.randomUUID().toString();
@@ -32,6 +33,7 @@ public class User {
     public String getFirebaseUid() { return firebaseUid; }
     public String getPasswordHash() { return passwordHash; }
     public int getAge() { return age; }
+    public boolean isOnboardingComplete() { return onboardingComplete; }
 
     public void setId(String id) { this.id = id; }
     public void setFullName(String fullName) { this.fullName = fullName; }
@@ -42,5 +44,6 @@ public class User {
     public void setEmailLowercase(String emailLowercase) { this.emailLowercase = emailLowercase; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public void setAge(int age) { this.age = age; }
+    public void setOnboardingComplete(boolean onboardingComplete) { this.onboardingComplete = onboardingComplete; }
     public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
 }

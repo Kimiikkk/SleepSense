@@ -49,6 +49,7 @@ public class FirebaseDataService {
         profile.put("fullName", user.getFullName());
         profile.put("age", user.getAge());
         profile.put("passwordHash", user.getPasswordHash());
+        profile.put("onboardingComplete", user.isOnboardingComplete());
         profile.put("authProvider", user.getFirebaseUid() == null ? "password" : "google.com");
         profile.put("updatedAt", Instant.now().toString());
         await(userDocument(user.getId()).set(profile, SetOptions.merge()), "Firestore could not save this account.");
@@ -152,6 +153,9 @@ public class FirebaseDataService {
         user.setPasswordHash(value(document, "passwordHash", ""));
         Object age = document.get("age");
         user.setAge(age instanceof Number number ? number.intValue() : 0);
+        Object onboardingComplete = document.get("onboardingComplete");
+        // Profiles created before age onboarding existed count as established accounts.
+        user.setOnboardingComplete(!(onboardingComplete instanceof Boolean complete) || complete);
         return user;
     }
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1118">
+  <title>SleepSense — Complete your profile</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <a class="auth-brand" href="/login" aria-label="SleepSense sign in">
+      <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M21.9 5.6a11.3 11.3 0 1 0 4.5 20.8A12.7 12.7 0 0 1 21.9 5.6Z"/><path d="M21.5 7.1v5.2m-2.6-2.6h5.2"/></svg></span>
+      <span class="brand-name">sleep<span>sense</span></span>
+    </a>
+    <p class="section-kicker">ONE LAST DETAIL</p>
+    <h1>Complete your profile</h1>
+    <p>Tell us your age to finish setting up your SleepSense account.</p>
+    <div class="error" role="alert" th:if="${error != null && !error.isEmpty()}" th:text="${error}"></div>
+    <form method="post" action="/complete-profile" class="form">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <label>Your age<input type="number" name="age" min="1" max="120" inputmode="numeric" autocomplete="off" required autofocus></label>
+      <button class="button button-primary full" type="submit">Continue to SleepSense</button>
+    </form>
+    <p class="auth-note">This is only requested the first time you sign in with this Google account.</p>
+  </main>
+</body>
+</html>

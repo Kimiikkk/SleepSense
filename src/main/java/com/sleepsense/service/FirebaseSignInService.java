@@ -14,6 +14,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class FirebaseSignInService {
@@ -31,7 +32,7 @@ public class FirebaseSignInService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User signInWithGoogle(String idToken) {
+    public GoogleSignInResult signInWithGoogle(String idToken) {
         FirebaseAuth auth = authProvider.getIfAvailable();
         if (auth == null) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Google sign-in is not configured yet.");
@@ -58,13 +59,14 @@ public class FirebaseSignInService {
         }
         String email = emailValue.toLowerCase(Locale.ROOT).trim();
 
-        User user = users.findByFirebaseUid(token.getUid())
-                .or(() -> users.findByEmailIgnoreCase(email))
-                .orElseGet(() -> new User(
-                        displayName(claims, email),
-                        email,
-                        passwordEncoder.encode(randomPassword()),
-                        0));
+        Optional<User> existingUser = users.findByFirebaseUid(token.getUid())
+                .or(() -> users.findByEmailIgnoreCase(email));
+        User user = existingUser.orElseGet(() -> new User(
+                displayName(claims, email),
+                email,
+                passwordEncoder.encode(randomPassword()),
+                0));
+        if (existingUser.isEmpty()) user.setOnboardingComplete(false);
 
         if (user.getFirebaseUid() != null && !user.getFirebaseUid().equals(token.getUid())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This email is already linked to another Google account.");
@@ -76,8 +78,10 @@ public class FirebaseSignInService {
         } catch (Exception e) {
             throw new IllegalStateException("FIRESTORE_USER_SAVE", e);
         }
-        return user;
+        return new GoogleSignInResult(user, !user.isOnboardingComplete());
     }
+
+    public record GoogleSignInResult(User user, boolean needsAge) {}
 
     private String displayName(Map<String, Object> claims, String email) {
         Object name = claims.get("name");
