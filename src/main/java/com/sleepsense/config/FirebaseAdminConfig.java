@@ -1,3 +1,4 @@
+
 package com.sleepsense.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -11,10 +12,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true")
@@ -23,32 +26,35 @@ public class FirebaseAdminConfig {
     @Bean(destroyMethod = "delete")
     FirebaseApp firebaseApp(
             @Value("${firebase.project-id}") String projectId,
-            @Value("${firebase.service-account-path:}") String serviceAccountPath) throws IOException {
+            @Value("${firebase.service-account-path:}") String serviceAccountPath,
+            @Value("${FIREBASE_SERVICE_ACCOUNT_JSON:}") String serviceAccountJson)
+            throws IOException {
+
         if (projectId.isBlank()) {
-            throw new IllegalStateException("FIREBASE_PROJECT_ID is required when Firebase is enabled.");
+            throw new IllegalStateException(
+                    "FIREBASE_PROJECT_ID is required when Firebase is enabled.");
         }
 
         GoogleCredentials credentials;
-        try {
-            if (serviceAccountPath.isBlank()) {
-                credentials = GoogleCredentials.getApplicationDefault();
-            } else {
-                Path keyFile = Path.of(serviceAccountPath).toAbsolutePath().normalize();
-                if (!Files.isRegularFile(keyFile)) {
-                    throw new IllegalStateException(
-                            "Firebase service-account JSON was not found at " + keyFile
-                                    + ". Set FIREBASE_SERVICE_ACCOUNT_PATH to the existing key file. "
-                                    + "In a Windows .env file, use forward slashes (C:/Users/...) "
-                                    + "or escape each backslash (C:\\\\Users\\\\...).");
-                }
-                try (InputStream key = Files.newInputStream(keyFile)) {
-                    credentials = GoogleCredentials.fromStream(key);
-                }
+
+        if (!serviceAccountJson.isBlank()) {
+            try (InputStream key = new ByteArrayInputStream(
+                    serviceAccountJson.getBytes(StandardCharsets.UTF_8))) {
+                credentials = GoogleCredentials.fromStream(key);
             }
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Firebase credentials could not be loaded. Set a valid FIREBASE_SERVICE_ACCOUNT_PATH "
-                            + "or configure Application Default Credentials.", e);
+        } else if (!serviceAccountPath.isBlank()) {
+            Path keyFile = Path.of(serviceAccountPath).toAbsolutePath().normalize();
+
+            if (!Files.isRegularFile(keyFile)) {
+                throw new IllegalStateException(
+                        "Firebase service-account JSON file was not found.");
+            }
+
+            try (InputStream key = Files.newInputStream(keyFile)) {
+                credentials = GoogleCredentials.fromStream(key);
+            }
+        } else {
+            credentials = GoogleCredentials.getApplicationDefault();
         }
 
         FirebaseOptions options = FirebaseOptions.builder()
