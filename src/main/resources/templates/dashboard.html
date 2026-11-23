@@ -37,14 +37,18 @@
     <div class="nav-caption">WORKSPACE</div>
     <nav class="primary-nav">
       <a class="nav-link active" href="#overview" aria-current="location"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4" rx="1.5"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Overview</span></a>
-      <a class="nav-link" href="#sessions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2.5-6 4.2 12 2.6-6h3.7"/><path d="M4 4.5h16v15H4z"/></svg><span>Sleep session</span></a>
-      <a class="nav-link" href="#analysis"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V12m5 7.5V5m5 14.5v-10m5 10V8"/><path d="M2.5 21h19"/></svg><span>Signals</span></a>
-      <a class="nav-link" href="#reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6m-6 3.5h6"/></svg><span>Report</span></a>
+      <a class="nav-link" href="#sessions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h4l2.5-6 4.2 12 2.6-6h3.7"/><path d="M4 4.5h16v15H4z"/></svg><span>Sleep sessions</span></a>
+      <a class="nav-link" href="#advanced-analytics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V12m5 7.5V5m5 14.5v-10m5 10V8"/><path d="M2.5 21h19"/></svg><span>Sleep analysis</span></a>
+      <a class="nav-link" href="#analysis"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h3l2-5 4 10 2-5h5"/><path d="M3 4h18v16H3z"/></svg><span>Signals</span></a>
+      <a class="nav-link" href="#eeg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5"/></svg><span>EEG monitoring</span></a>
+      <a class="nav-link" href="#reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6m-6 3.5h6"/></svg><span>Reports</span></a>
     </nav>
 
     <div class="nav-caption nav-caption-tools">PERSONAL</div>
     <nav class="primary-nav">
-      <a class="nav-link" href="#assistant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.1 13.2l-.8 3.8 3.8-.9A8.5 8.5 0 1 0 12 3.5Z"/><path d="M8.5 12h7m-7-3h4m-4 6h5"/></svg><span>AI assistant</span></a>
+      <a class="nav-link" href="#assistant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.1 13.2l-.8 3.8 3.8-.9A8.5 8.5 0 1 0 12 3.5Z"/><path d="M8.5 12h7m-7-3h4m-4 6h5"/></svg><span>AI Sleep Coach</span></a>
+      <a class="nav-link" href="#journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h13v16H6zM3 7v13h13"/><path d="M9 8h7m-7 3.5h7m-7 3.5h4"/></svg><span>Sleep journal</span></a>
+      <a class="nav-link" href="#goals"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="m12 12 6-6"/></svg><span>Sleep goals</span></a>
       <a class="nav-link" href="/profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg><span>My profile</span></a>
     </nav>
 
@@ -97,8 +101,8 @@
       </section>
 
       <section class="signal-grid" aria-label="Sleep session summary">
-        <article class="device-card signal-card signal-rose score-card" data-scroll-reveal th:attr="data-ring-value=${sleepSession.qualityScore}">
-          <div class="signal-card-copy"><h2>Sleep quality</h2><strong class="signal-value"><span th:text="${sleepSession.qualityScore}">82</span><small> / 100</small></strong><p>Simulated score</p><div class="signal-meter" aria-hidden="true"><span></span></div></div>
+        <article class="device-card signal-card signal-rose score-card" data-scroll-reveal th:attr="data-ring-value=${sleepScore.score}">
+          <div class="signal-card-copy"><h2>Smart Sleep Score</h2><strong class="signal-value"><span th:text="${sleepScore.score}">82</span><small> / 100</small></strong><p class="score-category"><span id="scoreCategory" th:text="${sleepScore.category}">Good</span> · explainable prototype score</p><p class="score-delta" id="scoreDelta" th:hidden="${sleepScore.difference == null}" th:text="|${sleepScore.difference > 0 ? '+' : ''}${sleepScore.difference} vs previous session|">+3 vs previous session</p><p class="score-delta" id="scoreProvisional" th:hidden="${!sleepScore.provisional}">Provisional · some inputs unavailable</p><div class="signal-meter" aria-hidden="true"><span></span></div></div>
           <div class="signal-ring" aria-hidden="true"><span class="ring-center"><svg viewBox="0 0 24 24"><path d="M18.8 14A7.4 7.4 0 0 1 10 5.2 7.8 7.8 0 1 0 18.8 14Z"/><path d="M16.5 4.5v3m-1.5-1.5h3"/></svg></span></div>
         </article>
         <article class="device-card signal-card signal-cyan stage-card" data-scroll-reveal th:attr="data-stage-minutes=${sleepSession.deepMinutes},data-session-minutes=${sleepSession.totalMinutes}">
@@ -159,8 +163,8 @@
             <div class="chart-head"><div><h3>Stage distribution</h3><p>Time in each sleep stage</p></div><span class="chart-units">SIMULATED MINUTES</span></div>
             <div class="chart-canvas"><canvas id="stageChart" aria-label="Simulated minutes in awake, light, deep, and REM sleep"></canvas></div>
           </article>
-          <article class="chart-panel signal-rose" id="reports" data-scroll-reveal>
-            <div class="chart-head"><div><h3>Sleep score trend</h3><p>Across recorded nights</p></div><span class="chart-units" th:text="|${sleepSessions.size()} NIGHT${sleepSessions.size() == 1 ? '' : 'S'}|">1 NIGHT</span></div>
+          <article class="chart-panel signal-rose" data-scroll-reveal>
+            <div class="chart-head"><div><h3>Session quality history</h3><p>Earlier prototype score · retained for reference</p></div><span class="chart-units" th:text="|${sleepSessions.size()} NIGHT${sleepSessions.size() == 1 ? '' : 'S'}|">1 NIGHT</span></div>
             <div class="chart-canvas"><canvas id="scoreChart" aria-label="Simulated sleep quality scores across recorded nights"></canvas></div>
           </article>
           <article class="vitals-panel signal-violet" data-scroll-reveal>
@@ -170,12 +174,91 @@
           </article>
         </div>
         <div class="history-data visually-hidden" id="sessionHistoryData" aria-hidden="true">
-          <span th:each="night : ${sleepSessions}" th:attr="data-id=${night.id},data-date=${#temporals.format(night.endTime, 'MMM d · h:mm a')},data-score=${night.qualityScore},data-delta=${night.deltaPower},data-theta=${night.thetaPower},data-alpha=${night.alphaPower},data-beta=${night.betaPower}"></span>
+          <span th:each="night : ${sleepSessions}" th:attr="data-id=${night.id},data-date=${#temporals.format(night.endTime, 'MMM d · h:mm a')},data-score=${night.qualityScore},data-smart-score=${night.smartSleepScore.score},data-total=${night.totalMinutes},data-awake=${night.awakeMinutes},data-light=${night.lightMinutes},data-deep=${night.deepMinutes},data-rem=${night.remMinutes},data-heart-rate=${night.averageHeartRate},data-spo2=${night.spo2},data-temperature=${night.skinTemperature},data-delta=${night.deltaPower},data-theta=${night.thetaPower},data-alpha=${night.alphaPower},data-beta=${night.betaPower},data-mode=${night.dataMode},data-has-delta=${night.availableMetrics.contains('deltaPower')},data-has-theta=${night.availableMetrics.contains('thetaPower')},data-has-alpha=${night.availableMetrics.contains('alphaPower')},data-has-beta=${night.availableMetrics.contains('betaPower')}"></span>
         </div>
       </section>
 
+      <section class="feature-section analytics-feature" id="advanced-analytics" data-scroll-reveal>
+        <div class="feature-heading"><div><h2>Sleep analysis</h2><p>Patterns and period comparisons from your saved sessions.</p></div><label class="period-control" for="analyticsPeriod">Period<select id="analyticsPeriod"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label></div>
+        <div class="analytics-summary" id="analyticsSummary" aria-live="polite"><p class="feature-loading">Loading your recent sleep history…</p></div>
+        <div class="analytics-comparison" id="analyticsComparison" aria-live="polite"></div>
+        <div class="feature-chart-grid">
+          <article class="chart-panel signal-cyan"><div class="chart-head"><div><h3>Sleep duration</h3><p>Hours per saved session</p></div><span class="chart-units">HOURS</span></div><div class="chart-canvas"><canvas id="durationTrendChart" aria-label="Sleep duration trend"></canvas></div></article>
+          <article class="chart-panel signal-rose"><div class="chart-head"><div><h3>Smart Sleep Score</h3><p>Score across saved nights</p></div><span class="chart-units">0–100</span></div><div class="chart-canvas"><canvas id="smartScoreTrendChart" aria-label="Smart Sleep Score trend"></canvas></div></article>
+          <article class="chart-panel signal-cyan"><div class="chart-head"><div><h3>Deep sleep</h3><p>Minutes per session</p></div><span class="chart-units">MIN</span></div><div class="chart-canvas"><canvas id="deepTrendChart" aria-label="Deep sleep trend"></canvas></div></article>
+          <article class="chart-panel signal-violet"><div class="chart-head"><div><h3>REM sleep</h3><p>Minutes per session</p></div><span class="chart-units">MIN</span></div><div class="chart-canvas"><canvas id="remTrendChart" aria-label="REM sleep trend"></canvas></div></article>
+          <article class="chart-panel signal-pink"><div class="chart-head"><div><h3>Awake time</h3><p>Minutes per session</p></div><span class="chart-units">MIN</span></div><div class="chart-canvas"><canvas id="awakeTrendChart" aria-label="Awake time trend"></canvas></div></article>
+          <article class="chart-panel signal-cyan"><div class="chart-head"><div><h3>Average heart rate</h3><p>Per saved session · simulated</p></div><span class="chart-units">BPM</span></div><div class="chart-canvas"><canvas id="heartRateTrendChart" aria-label="Average heart rate trend"></canvas></div></article>
+          <article class="chart-panel signal-violet"><div class="chart-head"><div><h3>SpO₂</h3><p>Per saved session · simulated</p></div><span class="chart-units">PERCENT</span></div><div class="chart-canvas"><canvas id="spo2TrendChart" aria-label="SpO2 trend"></canvas></div></article>
+          <article class="chart-panel signal-cyan"><div class="chart-head"><div><h3>Sleep-stage distribution</h3><p>Average share where collected</p></div><span class="chart-units">PERCENT</span></div><div class="chart-canvas"><canvas id="stageDistributionChart" aria-label="Sleep stage distribution"></canvas></div></article>
+          <article class="chart-panel signal-rose"><div class="chart-head"><div><h3>Schedule consistency</h3><p>Start and end time similarity</p></div><span class="chart-units">PERCENT</span></div><div class="chart-canvas"><canvas id="consistencyTrendChart" aria-label="Sleep schedule consistency trend"></canvas></div></article>
+        </div>
+        <p class="feature-disclosure">Trends describe saved prototype sessions. Missing readings are left blank; comparisons do not diagnose health conditions.</p>
+      </section>
+
+      <section class="feature-section eeg-feature" id="eeg" data-scroll-reveal>
+        <div class="feature-heading"><div><h2>EEG monitoring</h2><p>Relative band values in the selected saved session.</p></div><label class="period-control" for="eegSessionSelect">Sleep session<select id="eegSessionSelect"></select></label></div>
+        <div class="feature-chart-grid eeg-chart-grid">
+          <article class="chart-panel signal-violet"><div class="chart-head"><div><h3>Frequency-band power</h3><p id="eegSessionMode">Session snapshot · simulated</p></div><span class="chart-units">RELATIVE</span></div><div class="chart-canvas"><canvas id="eegSessionChart" aria-label="Selected session relative EEG band powers"></canvas></div></article>
+          <article class="chart-panel signal-pink"><div class="chart-head"><div><h3>Band distribution</h3><p>Normalized share of the saved band values</p></div><span class="chart-units">PERCENT</span></div><div class="chart-canvas"><canvas id="eegDistributionChart" aria-label="Selected session EEG band distribution"></canvas></div></article>
+          <article class="chart-panel eeg-history-panel signal-cyan"><div class="chart-head"><div><h3>Saved band history</h3><p>Historical session summaries · missing values stay blank</p></div><span class="chart-units">RELATIVE</span></div><div class="chart-canvas"><canvas id="eegHistoryChart" aria-label="Historical EEG relative band values by saved session"></canvas></div><p id="eegHistoryMode" class="chart-source-note"></p></article>
+        </div>
+        <div class="eeg-band-notes"><p><strong>Delta · 0.5–4 Hz</strong><span>Slow frequency band shown as a prototype estimate.</span></p><p><strong>Theta · 4–8 Hz</strong><span>Lower frequency band shown as a prototype estimate.</span></p><p><strong>Alpha · 8–13 Hz</strong><span>Mid frequency band shown as a prototype estimate.</span></p><p><strong>Beta · 13–30 Hz</strong><span>Higher frequency band shown as a prototype estimate.</span></p></div>
+        <p class="feature-disclosure">SleepSense stores per-session band summaries, not raw EEG samples. Simulated estimates stay labeled as simulated; the history chart does not invent an in-session waveform.</p>
+      </section>
+
+      <section class="feature-section journal-feature" id="journal" data-scroll-reveal>
+        <div class="feature-heading"><div><h2>Sleep journal</h2><p>Record daily habits and how you felt around sleep.</p></div></div>
+        <div class="journal-layout">
+          <form id="journalForm" class="feature-form">
+            <input type="hidden" id="journalOriginalDate">
+            <label for="journalDate">Entry date<input id="journalDate" name="date" type="date" required></label>
+            <div class="form-pair"><label for="moodBefore">Mood before bed<select id="moodBefore"><option value="">Not recorded</option><option>very low</option><option>low</option><option>steady</option><option>good</option><option>great</option></select></label><label for="moodAfter">Mood after waking<select id="moodAfter"><option value="">Not recorded</option><option>very low</option><option>low</option><option>steady</option><option>good</option><option>great</option></select></label></div>
+            <div class="form-pair"><label for="stressLevel">Stress before bed · 1–10<input id="stressLevel" type="number" min="1" max="10" value="5" required></label><label for="caffeineCups">Caffeine · cups<input id="caffeineCups" type="number" min="0" max="20" value="0" required></label></div>
+            <div class="form-pair"><label for="screenTimeMinutes">Screen time before bed · minutes<input id="screenTimeMinutes" type="number" min="0" max="1440" value="0" required></label><label for="eveningMealTime">Evening meal time<input id="eveningMealTime" type="time"></label></div>
+            <label class="check-field"><input id="exercised" type="checkbox"><span>Exercise or intentional activity today</span></label>
+            <label for="sleepEnvironment">Sleep environment<input id="sleepEnvironment" type="text" maxlength="160" placeholder="For example, cool and quiet"></label>
+            <label for="journalNotes">Personal notes<textarea id="journalNotes" rows="3" maxlength="2000" placeholder="Anything you want to remember about this night"></textarea></label>
+            <div class="form-actions"><button class="button button-primary" type="submit" id="journalSave">Save entry</button><button class="button button-secondary" type="button" id="journalCancel" hidden>Cancel edit</button></div>
+            <p id="journalStatus" class="form-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="journal-history">
+            <div class="history-toolbar"><h3>Your entries</h3><label for="journalFilter">Filter from<input id="journalFilter" type="date"></label><label for="journalThrough">Through<input id="journalThrough" type="date"></label></div>
+            <div class="journal-list" id="journalList" aria-live="polite"><p class="empty-state">Loading your journal…</p></div>
+            <div class="correlation-panel" id="journalCorrelations" aria-live="polite"><strong>Habit patterns</strong><p>Add at least five dates with both a journal entry and a saved sleep session to calculate a descriptive comparison.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section goals-feature" id="goals" data-scroll-reveal>
+        <div class="feature-heading"><div><h2>Sleep goals</h2><p>Set a schedule that feels realistic for you.</p></div></div>
+        <div class="goals-layout">
+          <form id="goalForm" class="feature-form">
+            <label for="targetSleepMinutes">Target sleep duration · minutes<input id="targetSleepMinutes" type="number" min="180" max="900" step="15" value="480" required></label>
+            <div class="form-pair"><label for="targetBedtime">Target bedtime<input id="targetBedtime" type="time" value="23:00" required></label><label for="targetWakeTime">Target wake-up<input id="targetWakeTime" type="time" value="07:00" required></label></div>
+            <label for="weeklyConsistencyNights">Weekly consistency goal · nights<input id="weeklyConsistencyNights" type="number" min="1" max="7" value="5" required></label>
+            <label class="check-field"><input id="bedtimeReminderEnabled" type="checkbox"><span>Enable a browser bedtime reminder while SleepSense is open</span></label>
+            <label for="reminderTime">Reminder time<input id="reminderTime" type="time" value="22:30"></label>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save sleep goals</button><button class="button button-secondary" type="button" id="enableNotifications">Allow browser notifications</button></div>
+            <p id="goalStatus" class="form-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="goal-progress" id="goalProgress" aria-live="polite"><p class="empty-state">Loading your goal progress…</p></div>
+        </div>
+        <p class="feature-disclosure">Browser reminders only fire while this page is open and notifications are allowed. The current prototype has no background scheduler. Synthetic sessions never earn measurement-based achievements.</p>
+      </section>
+
+      <section class="feature-section reports-feature" id="reports" data-scroll-reveal>
+        <div class="feature-heading"><div><h2>Sleep reports</h2><p>Download a server-generated PDF for your saved sleep history.</p></div></div>
+        <div class="report-options">
+          <div><span>Daily</span><small>Latest calendar day · score and signal summary</small><a class="button button-secondary" href="/api/reports/daily">Download daily PDF</a></div>
+          <div><span>Weekly</span><small>Last 7 days · trends and stage distribution</small><a class="button button-secondary" href="/api/reports/weekly">Download weekly PDF</a></div>
+          <div><span>Monthly</span><small>Last 30 days · monthly overview and score trend</small><a class="button button-secondary" href="/api/reports/monthly">Download monthly PDF</a></div>
+        </div>
+        <p class="feature-disclosure">Reports are generated from your account's saved data. Simulated readings remain labeled as prototype data.</p>
+      </section>
+
       <section class="assistant-section" id="assistant" data-scroll-reveal>
-        <div class="assistant-intro"><span class="assistant-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 0 0-7.1 13.2l-.8 3.8 3.8-.9A8.5 8.5 0 1 0 12 3.5Z"/><path d="M8.5 12h7m-7-3h4m-4 6h5"/></svg></span><div><h2>Explore your sleep</h2><p>Ask for general explanations or sleep-hygiene suggestions.</p></div></div>
+        <div class="assistant-intro"><span class="assistant-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 0 0-7.1 13.2l-.8 3.8 3.8-.9A8.5 8.5 0 1 0 12 3.5Z"/><path d="M8.5 12h7m-7-3h4m-4 6h5"/></svg></span><div><h2>AI Sleep Coach</h2><p>Ask about recent patterns, measurements, or sleep routines.</p></div><span class="coach-source" id="coachMode">Local guide active</span></div>
         <div class="suggestions" aria-label="Suggested questions">
           <button type="button" onclick="ask('Explain my sleep report')">Explain my sleep report</button>
           <button type="button" onclick="ask('How can I improve my sleep?')">How can I improve my sleep?</button>
@@ -184,7 +267,7 @@
         </div>
         <div id="chat" class="chat" aria-live="polite" aria-label="Sleep guide conversation"><p class="chat-empty">Your conversation will appear here.</p></div>
         <form id="chatForm" class="chat-form"><label class="visually-hidden" for="chatInput">Ask the SleepSense guide</label><input id="chatInput" type="text" placeholder="Ask about your sleep…" autocomplete="off"><button class="button button-primary" type="submit">Send <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button></form>
-        <p class="disclaimer">General wellness information only. This prototype does not diagnose medical conditions; all readings are simulated.</p>
+        <p class="disclaimer">General wellness information only. The coach is not a diagnostic system. When an external provider is configured, recent session summaries and journal signals are sent securely from this server to that provider.</p>
       </section>
 
       <footer class="page-footer"><span>SleepSense <span class="footer-divider">/</span> Software prototype</span><span>Wearable readings are simulated</span></footer>
@@ -275,13 +358,16 @@ if (scrollNavItems.length) {
     scrollNavFrame = 0;
     const activationLine = Math.min(210, Math.max(118, window.innerHeight * 0.22));
     let currentItem = scrollNavItems[0];
-
+    let crossedTop = -Infinity;
     for (const item of scrollNavItems) {
-      if (item.target.getBoundingClientRect().top <= activationLine) currentItem = item;
-      else break;
+      const top = item.target.getBoundingClientRect().top;
+      if (top <= activationLine && top > crossedTop) {
+        currentItem = item;
+        crossedTop = top;
+      }
     }
     if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
-      currentItem = scrollNavItems[scrollNavItems.length - 1];
+      currentItem = scrollNavItems.reduce((last, item) => item.target.offsetTop > last.target.offsetTop ? item : last, scrollNavItems[0]);
     }
 
     scrollNavItems.forEach(item => {
@@ -307,6 +393,7 @@ const sleepSession = {
   deep: /*[[${sleepSession.deepMinutes}]]*/ 90,
   rem: /*[[${sleepSession.remMinutes}]]*/ 80,
   score: /*[[${sleepSession.qualityScore}]]*/ 80,
+  smartScore: /*[[${sleepScore.score}]]*/ 80,
   hr: /*[[${sleepSession.averageHeartRate}]]*/ 61,
   delta: /*[[${sleepSession.deltaPower}]]*/ 0.62,
   theta: /*[[${sleepSession.thetaPower}]]*/ 0.24,
@@ -469,25 +556,27 @@ const liveTimeScale = () => ({
 const liveChartAnimation = { duration: reducedMotion ? 0 : 360, easing: 'easeOutQuart' };
 const hrChart = new Chart(document.getElementById('hrChart'), { type: 'line', data: { datasets: [{ data: createHeartRateWindow(sleepSession.hr), borderColor: '#69d7e3', backgroundColor: 'rgba(105, 215, 227, .08)', fill: true, tension: .38, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#69d7e3' }] }, options: { ...chartBase, parsing: false, animation: liveChartAnimation, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: liveTooltipTitle, label: context => `${context.parsed.y.toFixed(1)} BPM · simulated` } } }, scales: { ...chartBase.scales, x: liveTimeScale(), y: { ...chartBase.scales.y, suggestedMin: 45, suggestedMax: 80, ticks: { ...chartBase.scales.y.ticks, stepSize: 10 } } } } });
 let historyPoints = [...document.querySelectorAll('#sessionHistoryData > span')].map(point => ({
-  id: Number(point.dataset.id),
+  id: point.dataset.id,
   date: point.dataset.date,
   score: Number(point.dataset.score),
+  smartScore: Number(point.dataset.smartScore),
   delta: Number(point.dataset.delta),
   theta: Number(point.dataset.theta),
   alpha: Number(point.dataset.alpha),
-  beta: Number(point.dataset.beta)
+  beta: Number(point.dataset.beta),
+  available: { delta: point.dataset.hasDelta === 'true', theta: point.dataset.hasTheta === 'true', alpha: point.dataset.hasAlpha === 'true', beta: point.dataset.hasBeta === 'true' }
 })).reverse();
-let historyLabels = historyPoints.map(point => `#${point.id}`);
+let historyLabels = historyPoints.map((point, index) => point.date || `Night ${index + 1}`);
 const historyTooltipTitle = items => {
   const point = historyPoints[items[0]?.dataIndex];
-  return point ? `Night ${point.id} · ${point.date}` : 'Latest night';
+  return point ? `Night · ${point.date}` : 'Latest night';
 };
-let historyOrLatest = historyPoints.length ? historyPoints : [{ date: 'Latest night', score: sleepSession.score || 0, delta: sleepSession.delta, theta: sleepSession.theta, alpha: sleepSession.alpha, beta: sleepSession.beta }];
+let historyOrLatest = historyPoints.length ? historyPoints : [{ date: 'Latest night', score: sleepSession.score || 0, smartScore: sleepSession.smartScore || 0, delta: sleepSession.delta, theta: sleepSession.theta, alpha: sleepSession.alpha, beta: sleepSession.beta, available: { delta: true, theta: true, alpha: true, beta: true } }];
 const eegChart = new Chart(document.getElementById('eegChart'), { type: 'line', data: { labels: historyPoints.length ? historyLabels : ['Latest night'], datasets: [
-  { label: 'Delta', data: historyOrLatest.map(point => point.delta), borderColor: '#69d7e3', backgroundColor: '#69d7e3', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5 },
-  { label: 'Theta', data: historyOrLatest.map(point => point.theta), borderColor: '#8da9c7', backgroundColor: '#8da9c7', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5 },
-  { label: 'Alpha', data: historyOrLatest.map(point => point.alpha), borderColor: '#a493ff', backgroundColor: '#a493ff', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5 },
-  { label: 'Beta', data: historyOrLatest.map(point => point.beta), borderColor: '#e58ad2', backgroundColor: '#e58ad2', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5 }
+  { label: 'Delta', data: historyOrLatest.map(point => point.available.delta ? point.delta : null), borderColor: '#69d7e3', backgroundColor: '#69d7e3', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5, spanGaps: false },
+  { label: 'Theta', data: historyOrLatest.map(point => point.available.theta ? point.theta : null), borderColor: '#8da9c7', backgroundColor: '#8da9c7', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5, spanGaps: false },
+  { label: 'Alpha', data: historyOrLatest.map(point => point.available.alpha ? point.alpha : null), borderColor: '#a493ff', backgroundColor: '#a493ff', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5, spanGaps: false },
+  { label: 'Beta', data: historyOrLatest.map(point => point.available.beta ? point.beta : null), borderColor: '#e58ad2', backgroundColor: '#e58ad2', tension: .28, borderWidth: 2, pointRadius: historyOrLatest.length === 1 ? 3 : 1, pointHoverRadius: 5, spanGaps: false }
 ] }, options: { ...chartBase, interaction: { mode: 'index', intersect: false }, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: historyTooltipTitle } }, legend: { display: true, position: 'top', align: 'end', labels: { color: '#aeb9c5', boxWidth: 7, boxHeight: 7, usePointStyle: true, pointStyle: 'circle', padding: 11, font: { size: 8 } } } }, scales: { ...chartBase.scales, x: { ...chartBase.scales.x, ticks: { ...chartBase.scales.x.ticks, autoSkip: true, maxTicksLimit: 6 } }, y: { ...chartBase.scales.y, max: 1, ticks: { ...chartBase.scales.y.ticks, stepSize: .25 } } } } });
 const motionChart = new Chart(document.getElementById('motionChart'), { type: 'line', data: { datasets: [{ data: createMovementWindow(sleepSession.movement), borderColor: '#a493ff', backgroundColor: 'rgba(164, 147, 255, .09)', fill: true, tension: .38, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 }] }, options: { ...chartBase, parsing: false, animation: liveChartAnimation, plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { title: liveTooltipTitle, label: context => `Activity ${Math.round(context.parsed.y * 100)}% · simulated` } } }, scales: { ...chartBase.scales, x: liveTimeScale(), y: { ...chartBase.scales.y, max: 1, ticks: { ...chartBase.scales.y.ticks, stepSize: .25 } } } } });
 const stageChart = new Chart(document.getElementById('stageChart'), { type: 'bar', data: { labels: ['Awake', 'Light', 'Deep', 'REM'], datasets: [{ data: [sleepSession.awake, sleepSession.light, sleepSession.deep, sleepSession.rem], backgroundColor: ['#737d8b', '#8da9c7', '#69d7e3', '#b597ff'], borderRadius: 4, maxBarThickness: 22 }] }, options: { ...chartBase, indexAxis: 'y', plugins: { ...chartBase.plugins, tooltip: { ...chartBase.plugins.tooltip, callbacks: { label: context => `${context.raw} min · ${Math.round(context.raw / sessionDuration * 100)}%` } } }, scales: { x: { ...chartBase.scales.x, grid: { color: chartGrid }, ticks: { ...chartBase.scales.x.ticks, callback: value => `${value}m` } }, y: { ...chartBase.scales.y, grid: { display: false }, ticks: { color: '#b8c4cf' } } } } });
@@ -658,9 +747,11 @@ function resetLiveSignalWindow(chart, now = performance.now()) {
 
 function updateNight(payload) {
   const night = payload.session;
+  const smartScore = night.smartSleepScore || { score: night.qualityScore, category: 'Provisional', difference: null, provisional: true, factors: [] };
   Object.assign(sleepSession, {
     awake: night.awakeMinutes, light: night.lightMinutes, deep: night.deepMinutes, rem: night.remMinutes,
     score: night.qualityScore, hr: night.averageHeartRate, movement: night.averageMovement,
+    smartScore: smartScore.score,
     spo2: night.spo2, skinTemperature: night.skinTemperature,
     delta: night.deltaPower, theta: night.thetaPower, alpha: night.alphaPower, beta: night.betaPower
   });
@@ -672,11 +763,16 @@ function updateNight(payload) {
   timelineWrap.querySelectorAll('.axis-time').forEach((label, index) => { label.textContent = sessionLabels[index]; });
 
   const scoreCard = document.querySelector('.score-card');
-  scoreCard.dataset.ringValue = String(night.qualityScore);
-  scoreCard.style.setProperty('--ring-progress', `${night.qualityScore}%`);
-  scoreCard.querySelector('.signal-meter span').style.width = `${night.qualityScore}%`;
-  animateCount(scoreCard.querySelector('.signal-value span'), night.qualityScore);
-
+  scoreCard.dataset.ringValue = String(smartScore.score);
+  scoreCard.style.setProperty('--ring-progress', `${smartScore.score}%`);
+  scoreCard.querySelector('.signal-meter span').style.width = `${smartScore.score}%`;
+  animateCount(scoreCard.querySelector('.signal-value span'), smartScore.score);
+  document.getElementById('scoreCategory').textContent = smartScore.category;
+  const scoreDelta = document.getElementById('scoreDelta');
+  scoreDelta.hidden = smartScore.difference == null;
+  scoreDelta.textContent = smartScore.difference == null ? '' : `${smartScore.difference > 0 ? '+' : ''}${smartScore.difference} vs previous session`;
+  const scoreProvisional = document.getElementById('scoreProvisional');
+  scoreProvisional.hidden = !smartScore.provisional;
   document.querySelectorAll('.stage-card').forEach(card => {
     const deep = card.classList.contains('signal-cyan');
     const minutes = deep ? night.deepMinutes : night.remMinutes;
@@ -707,11 +803,16 @@ function updateNight(payload) {
   document.querySelectorAll('.vital-reading strong')[1].textContent = `${night.skinTemperature.toFixed(1)} °C`;
 
   historyPoints = payload.history.map(point => ({
-    id: Number(point.id), date: point.date, score: Number(point.qualityScore),
-    delta: Number(point.deltaPower), theta: Number(point.thetaPower), alpha: Number(point.alphaPower), beta: Number(point.betaPower)
+    id: String(point.id), date: point.date, score: Number(point.qualityScore),
+    smartScore: Number(point.smartSleepScore?.score ?? point.qualityScore),
+    delta: Number(point.deltaPower), theta: Number(point.thetaPower), alpha: Number(point.alphaPower), beta: Number(point.betaPower),
+    available: { delta: point.availableMetrics?.includes('deltaPower') ?? false,
+      theta: point.availableMetrics?.includes('thetaPower') ?? false,
+      alpha: point.availableMetrics?.includes('alphaPower') ?? false,
+      beta: point.availableMetrics?.includes('betaPower') ?? false }
   })).reverse();
-  historyLabels = historyPoints.map(point => `#${point.id}`);
-  historyOrLatest = historyPoints.length ? historyPoints : [{ date: 'Latest night', score: sleepSession.score, delta: sleepSession.delta, theta: sleepSession.theta, alpha: sleepSession.alpha, beta: sleepSession.beta }];
+  historyLabels = historyPoints.map(point => point.date);
+  historyOrLatest = historyPoints.length ? historyPoints : [{ date: 'Latest night', score: sleepSession.score, smartScore: sleepSession.smartScore, delta: sleepSession.delta, theta: sleepSession.theta, alpha: sleepSession.alpha, beta: sleepSession.beta, available: { delta: true, theta: true, alpha: true, beta: true } }];
   const chartHistoryLabels = historyPoints.length ? historyLabels : ['Latest night'];
   liveGraphNow = performance.now();
   liveHeartRateSamples = createHeartRateWindow(sleepSession.hr, liveGraphNow);
@@ -720,7 +821,7 @@ function updateNight(payload) {
   hrChart.options.scales.x.max = liveGraphNow;
   liveHeartRateReadout.textContent = String(Math.round(liveHeartRateSamples.at(-1).y));
   eegChart.data.labels = chartHistoryLabels;
-  eegChart.data.datasets.forEach((dataset, index) => { dataset.data = historyOrLatest.map(point => [point.delta, point.theta, point.alpha, point.beta][index]); });
+  eegChart.data.datasets.forEach((dataset, index) => { const metric = ['delta', 'theta', 'alpha', 'beta'][index]; dataset.data = historyOrLatest.map(point => point.available[metric] ? point[metric] : null); });
   liveMovementSamples = createMovementWindow(sleepSession.movement, liveGraphNow);
   motionChart.data.datasets[0].data = liveMovementSamples;
   motionChart.options.scales.x.min = liveGraphNow - liveWindowMs;
@@ -734,6 +835,7 @@ function updateNight(payload) {
   scoreChart.data.labels = chartHistoryLabels;
   scoreChart.data.datasets[0].data = historyOrLatest.map(point => point.score);
   [hrChart, eegChart, motionChart, stageChart, scoreChart].forEach(chart => chart.update());
+  window.refreshAdvancedFeatures?.(payload.history);
 
   document.querySelectorAll('.chart-units').forEach(unit => {
     if (unit.textContent.includes('NIGHT')) unit.textContent = `${historyPoints.length} NIGHT${historyPoints.length === 1 ? '' : 'S'}`;
@@ -818,12 +920,18 @@ generateForm.addEventListener('submit', async event => {
 });
 
 const chat = document.getElementById('chat');
-function addMessage(text, who) {
+function addMessage(text, who, source = '', disclaimer = '') {
   const empty = chat.querySelector('.chat-empty');
   if (empty) empty.remove();
   const message = document.createElement('div');
   message.className = `message ${who}`;
   message.textContent = text;
+  if (source || disclaimer) {
+    const detail = document.createElement('small');
+    detail.className = 'message-detail';
+    detail.textContent = [source, disclaimer].filter(Boolean).join(' · ');
+    message.appendChild(detail);
+  }
   chat.appendChild(message);
   chat.scrollTop = chat.scrollHeight;
 }
@@ -834,12 +942,25 @@ async function ask(question) {
   send.disabled = true;
   send.textContent = 'Thinking…';
   try {
-    const response = await fetch('/api/chat?message=' + encodeURIComponent(question));
-    if (!response.ok) throw new Error('Server returned ' + response.status);
-    addMessage(await response.text(), 'bot');
+    const token = document.querySelector('input[name="_csrf"]')?.value || '';
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+      body: JSON.stringify({ question })
+    });
+    const isJson = (response.headers.get('content-type') || '').includes('application/json');
+    if (response.redirected || response.status === 401 || response.status === 403) {
+      throw new Error('Your sign-in may have expired. Refresh the page and sign in again.');
+    }
+    if (!isJson) throw new Error(`SleepSense returned an unexpected response (${response.status}).`);
+    const reply = await response.json();
+    if (!response.ok) throw new Error(reply.message || 'The sleep coach could not respond.');
+    addMessage(reply.answer || 'I could not form a response just now.', 'bot', reply.source, reply.disclaimer);
+    const mode = document.getElementById('coachMode');
+    if (mode && reply.source) mode.textContent = reply.source;
   } catch (error) {
-    console.error('AI error:', error);
-    addMessage('I could not connect just now. Please try again.', 'bot');
+    addMessage(error.message || 'I could not connect just now. Please try again.', 'bot');
   } finally {
     send.disabled = false;
     send.innerHTML = 'Send <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>';
@@ -855,5 +976,6 @@ document.getElementById('chatForm').addEventListener('submit', event => {
   ask(message);
 });
 </script>
+<script src="/js/advanced-features.js" defer></script>
 </body>
 </html>

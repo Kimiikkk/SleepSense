@@ -7,6 +7,9 @@ import com.sleepsense.repository.SleepSessionRepository;
 import com.sleepsense.service.DummyDataService;
 import com.sleepsense.service.AIChatService;
 import com.sleepsense.service.FirebaseSignInService;
+import com.sleepsense.service.SleepScoreCalculator;
+import com.sleepsense.service.SleepAnalyticsService;
+import com.sleepsense.service.AuthenticatedUserResolver;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,6 +43,9 @@ public class PageController {
     private final AIChatService ai;
     private final PasswordEncoder encoder;
     private final FirebaseSignInService firebaseSignIn;
+    private final SleepScoreCalculator scoreCalculator;
+    private final SleepAnalyticsService analytics;
+    private final AuthenticatedUserResolver userResolver;
 
     @Value("${firebase.web.api-key:}")
     private String firebaseApiKey;
@@ -54,13 +60,17 @@ public class PageController {
 
     public PageController(UserRepository users, SleepSessionRepository sessions,
                           DummyDataService dummy, AIChatService ai, PasswordEncoder encoder,
-                          FirebaseSignInService firebaseSignIn) {
+                          FirebaseSignInService firebaseSignIn, SleepScoreCalculator scoreCalculator,
+                          SleepAnalyticsService analytics, AuthenticatedUserResolver userResolver) {
         this.users = users;
         this.sessions = sessions;
         this.dummy = dummy;
         this.ai = ai;
         this.encoder = encoder;
         this.firebaseSignIn = firebaseSignIn;
+        this.scoreCalculator = scoreCalculator;
+        this.analytics = analytics;
+        this.userResolver = userResolver;
     }
 
     @GetMapping("/")
@@ -207,26 +217,33 @@ public class PageController {
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model) {
         User user = authenticatedUser(auth);
-        var history = sessions.findByUserOrderByStartTimeDesc(user);
+        var history = sessions.findRecentByUserOrderByStartTimeDesc(user, 500);
         var latest = history.isEmpty() ? dummy.generate(user) : history.get(0);
         if (history.isEmpty()) {
             history = sessions.findByUserOrderByStartTimeDesc(user);
         }
+        boolean latestScoreNeedsSave = !history.isEmpty() && history.get(0).getSmartSleepScore() == null;
+        for (int index = history.size() - 1; index >= 0; index--) {
+            SleepSession night = history.get(index);
+            if (night.getSmartSleepScore() == null) {
+                int olderEnd = Math.min(history.size(), index + 7);
+                night.setSmartSleepScore(scoreCalculator.calculate(night, history.subList(index + 1, olderEnd)));
+            }
+        }
+        if (latestScoreNeedsSave) sessions.save(history.get(0));
         model.addAttribute("user", user);
         model.addAttribute("sleepSession", latest);
         model.addAttribute("sleepSessions", history);
+        model.addAttribute("sleepScore", latest.getSmartSleepScore());
         return "dashboard";
     }
 
     @GetMapping("/profile")
     public String profile(Authentication auth, Model model) {
-
-            User user = authenticatedUser(auth);
-
-            model.addAttribute("user", user);
-
-            return "profile";
-}
+        User user = authenticatedUser(auth);
+        model.addAttribute("user", user);
+        return "profile";
+    }
 
     @PostMapping(value = "/api/demo/generate-session", produces = "application/json")
     @ResponseBody
@@ -234,9 +251,9 @@ public class PageController {
         User user = authenticatedUser(auth);
         SleepSession generated = dummy.generate(user);
 
-        var history = sessions.findByUserOrderByStartTimeDesc(user);
+        var history = sessions.findRecentByUserOrderByStartTimeDesc(user, 500);
         var result = new LinkedHashMap<String, Object>();
-        result.put("session", sessionPayload(history.get(0)));
+        result.put("session", sessionPayload(generated));
         result.put("history", history.stream().map(this::sessionPayload).toList());
         return result;
     }
@@ -261,6 +278,9 @@ public class PageController {
         payload.put("alphaPower", session.getAlphaPower());
         payload.put("betaPower", session.getBetaPower());
         payload.put("qualityScore", session.getQualityScore());
+        payload.put("dataMode", session.getDataMode());
+        payload.put("availableMetrics", session.getAvailableMetrics());
+        payload.put("smartSleepScore", session.getSmartSleepScore());
         return payload;
     }
 
@@ -273,6 +293,17 @@ public class PageController {
             latest = dummy.generate(user);
         }
         return ai.reply(message, latest);
+    }
+
+    @GetMapping(value = "/api/analytics", produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> analytics(@RequestParam(defaultValue = "7") int days,
+                                                           Authentication auth) {
+        try {
+            return ResponseEntity.ok(analytics.analytics(authenticatedUser(auth), days));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Choose a 7, 30, or 90 day period."));
+        }
     }
 
     @PostMapping(value = "/api/auth/firebase", consumes = "application/json", produces = "application/json")
@@ -325,11 +356,7 @@ public class PageController {
     }
 
     private User authenticatedUser(Authentication authentication) {
-        String principal = authentication.getName();
-        if (principal.startsWith("firebase:")) {
-            return users.findByFirebaseUid(principal.substring("firebase:".length())).orElseThrow();
-        }
-        return users.findByEmailIgnoreCase(principal).orElseThrow();
+        return userResolver.require(authentication);
     }
 
     private void authenticateUser(User user, HttpServletRequest request, HttpServletResponse response) {

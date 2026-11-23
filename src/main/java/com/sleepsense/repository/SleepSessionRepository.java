@@ -28,6 +28,10 @@ public class SleepSessionRepository {
         return data.findSleepSessions(user);
     }
 
+    public List<SleepSession> findRecentByUserOrderByStartTimeDesc(User user, int limit) {
+        return data.findRecentSleepSessions(user, limit);
+    }
+
     public Optional<SleepSession> findFirstByUserOrderByIdDesc(User user) {
         return data.findSleepSessions(user).stream().findFirst();
     }

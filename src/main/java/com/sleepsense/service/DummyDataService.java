@@ -13,14 +13,17 @@ public class DummyDataService {
 
     private final SleepSessionRepository repository;
     private final SleepDataAnalyzer analyzer;
+    private final SleepScoreCalculator scoreCalculator;
     private final Random random = new Random();
 
     public DummyDataService(
             SleepSessionRepository repository,
-            SleepDataAnalyzer analyzer) {
+            SleepDataAnalyzer analyzer,
+            SleepScoreCalculator scoreCalculator) {
 
         this.repository = repository;
         this.analyzer = analyzer;
+        this.scoreCalculator = scoreCalculator;
     }
 
     public SleepSession generate(User user) {
@@ -190,8 +193,7 @@ public class DummyDataService {
         // SAVE SESSION
         // =====================================================
 
-        return repository.save(
-                new SleepSession(
+        SleepSession session = new SleepSession(
                         user,
                         start,
                         end,
@@ -209,7 +211,10 @@ public class DummyDataService {
                         alpha,
                         beta,
                         quality
-                )
-        );
+                );
+        session.setDataMode("simulated");
+        session.setSmartSleepScore(scoreCalculator.calculate(session,
+                repository.findRecentByUserOrderByStartTimeDesc(user, 500)));
+        return repository.save(session);
     }
 }

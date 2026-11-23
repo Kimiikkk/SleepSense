@@ -1,6 +1,8 @@
 package com.sleepsense.model;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /** A simulated or measured sleep session stored in Cloud Firestore. */
@@ -24,6 +26,9 @@ public class SleepSession {
     private int qualityScore;
     private String userId;
     private transient User user;
+    private Set<String> availableMetrics = new LinkedHashSet<>();
+    private String dataMode = "simulated";
+    private SleepScoreBreakdown smartSleepScore;
 
     public SleepSession() {
         this.id = UUID.randomUUID().toString();
@@ -53,6 +58,9 @@ public class SleepSession {
         this.alphaPower = alphaPower;
         this.betaPower = betaPower;
         this.qualityScore = qualityScore;
+        this.availableMetrics.addAll(Set.of("totalMinutes", "awakeMinutes", "lightMinutes", "deepMinutes",
+                "remMinutes", "averageHeartRate", "averageMovement", "spo2", "skinTemperature",
+                "deltaPower", "thetaPower", "alphaPower", "betaPower", "qualityScore"));
     }
 
     public String getId() { return id; }
@@ -74,6 +82,10 @@ public class SleepSession {
     public double getSkinTemperature() { return skinTemperature; }
     public String getUserId() { return userId; }
     public User getUser() { return user; }
+    public Set<String> getAvailableMetrics() { return Set.copyOf(availableMetrics); }
+    public boolean isMetricAvailable(String metric) { return availableMetrics.contains(metric); }
+    public String getDataMode() { return dataMode; }
+    public SleepScoreBreakdown getSmartSleepScore() { return smartSleepScore; }
 
     public void setId(String id) { this.id = id; }
     public void setUser(User user) {
@@ -97,4 +109,12 @@ public class SleepSession {
     public void setAlphaPower(double alphaPower) { this.alphaPower = alphaPower; }
     public void setBetaPower(double betaPower) { this.betaPower = betaPower; }
     public void setQualityScore(int qualityScore) { this.qualityScore = qualityScore; }
+    public void setAvailableMetrics(Set<String> availableMetrics) {
+        this.availableMetrics = availableMetrics == null ? new LinkedHashSet<>() : new LinkedHashSet<>(availableMetrics);
+    }
+    public void setMetricAvailable(String metric, boolean available) {
+        if (available) availableMetrics.add(metric); else availableMetrics.remove(metric);
+    }
+    public void setDataMode(String dataMode) { this.dataMode = dataMode == null ? "simulated" : dataMode; }
+    public void setSmartSleepScore(SleepScoreBreakdown smartSleepScore) { this.smartSleepScore = smartSleepScore; }
 }

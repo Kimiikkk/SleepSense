@@ -269,7 +269,9 @@ class FirebaseGoogleOnboardingTest {
     private PageController controller(UserRepository users, FirebaseSignInService signIn) {
         return new PageController(users, mock(SleepSessionRepository.class),
                 mock(DummyDataService.class), mock(AIChatService.class),
-                mock(PasswordEncoder.class), signIn);
+                mock(PasswordEncoder.class), signIn, new SleepScoreCalculator(),
+                new SleepAnalyticsService(mock(SleepSessionRepository.class), new SleepScoreCalculator()),
+                new AuthenticatedUserResolver(users));
     }
 
     private Map<String, Object> googleClaims() {

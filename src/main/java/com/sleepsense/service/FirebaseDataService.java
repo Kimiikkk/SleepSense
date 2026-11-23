@@ -7,8 +7,10 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.SetOptions;
 import com.sleepsense.model.SleepSession;
+import com.sleepsense.model.SleepScoreBreakdown;
 import com.sleepsense.model.User;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -134,7 +136,11 @@ public class FirebaseDataService {
         data.put("alphaPower", session.getAlphaPower());
         data.put("betaPower", session.getBetaPower());
         data.put("qualityScore", session.getQualityScore());
-        data.put("dataMode", "simulated");
+        data.put("dataMode", session.getDataMode());
+        data.put("availableMetrics", new ArrayList<>(session.getAvailableMetrics()));
+        if (session.getSmartSleepScore() != null) {
+            data.put("smartSleepScore", scoreData(session.getSmartSleepScore()));
+        }
         data.put("updatedAt", Instant.now().toString());
 
         await(sleepSessions(user.getId()).document(session.getId()).set(data, SetOptions.merge()),
@@ -153,6 +159,19 @@ public class FirebaseDataService {
         result.sort(Comparator.comparing(SleepSession::getStartTime,
                 Comparator.nullsLast(Comparator.reverseOrder())));
         return result;
+    }
+
+    public List<SleepSession> findRecentSleepSessions(User user, int requestedLimit) {
+        if (user.getId() == null || user.getId().isBlank()) return List.of();
+        int limit = Math.max(1, Math.min(requestedLimit, 500));
+        QuerySnapshot snapshot = await(sleepSessions(user.getId()).orderBy("endTime", Query.Direction.DESCENDING)
+                .limit(limit).get(), "Firestore could not load this user's recent sleep history.");
+        List<SleepSession> result = new ArrayList<>();
+        for (QueryDocumentSnapshot document : snapshot.getDocuments()) result.add(toSleepSession(document, user));
+        result.sort(Comparator.comparing(SleepSession::getStartTime,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        // Old documents may use a different timestamp key; preserve their access if the indexed query is empty.
+        return result.isEmpty() ? findSleepSessions(user) : result;
     }
 
     private User toUser(DocumentSnapshot document) {
@@ -194,8 +213,74 @@ public class FirebaseDataService {
         session.setAlphaPower(number(document, "alphaPower").doubleValue());
         session.setBetaPower(number(document, "betaPower").doubleValue());
         session.setQualityScore(number(document, "qualityScore").intValue());
+        session.setDataMode(value(document, "dataMode", "simulated"));
+        session.setAvailableMetrics(new java.util.LinkedHashSet<>(availableMetrics(document)));
+        Object score = document.get("smartSleepScore");
+        if (score instanceof Map<?, ?> values) session.setSmartSleepScore(scoreFromData(values));
         return session;
     }
+
+    private List<String> availableMetrics(DocumentSnapshot document) {
+        Object stored = document.get("availableMetrics");
+        if (stored instanceof List<?> values) {
+            return values.stream().filter(String.class::isInstance).map(String.class::cast).toList();
+        }
+        // Compatibility for existing sessions: a field is available only when it was actually stored.
+        return List.of("totalMinutes", "awakeMinutes", "lightMinutes", "deepMinutes", "remMinutes",
+                        "averageHeartRate", "averageMovement", "spo2", "skinTemperature", "deltaPower",
+                        "thetaPower", "alphaPower", "betaPower", "qualityScore")
+                .stream().filter(field -> document.get(field) instanceof Number).toList();
+    }
+
+    private Map<String, Object> scoreData(SleepScoreBreakdown score) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("score", score.score());
+        data.put("category", score.category());
+        data.put("previousScore", score.previousScore());
+        data.put("difference", score.difference());
+        data.put("provisional", score.provisional());
+        data.put("factors", score.factors().stream().map(factor -> {
+            Map<String, Object> value = new LinkedHashMap<>();
+            value.put("metric", factor.metric());
+            value.put("label", factor.label());
+            value.put("points", factor.points());
+            value.put("weight", factor.weight());
+            value.put("direction", factor.direction());
+            value.put("explanation", factor.explanation());
+            return value;
+        }).toList());
+        return data;
+    }
+
+    private SleepScoreBreakdown scoreFromData(Map<?, ?> data) {
+        int score = integer(data.get("score"), 0);
+        Integer previous = nullableInteger(data.get("previousScore"));
+        Integer difference = nullableInteger(data.get("difference"));
+        List<SleepScoreBreakdown.Factor> factors = new ArrayList<>();
+        Object rawFactors = data.get("factors");
+        if (rawFactors instanceof List<?> entries) {
+            for (Object entry : entries) {
+                if (entry instanceof Map<?, ?> factor) {
+                    factors.add(new SleepScoreBreakdown.Factor(
+                            string(factor.get("metric")), string(factor.get("label")),
+                            integer(factor.get("points"), 0), integer(factor.get("weight"), 0),
+                            string(factor.get("direction")), string(factor.get("explanation"))));
+                }
+            }
+        }
+        return new SleepScoreBreakdown(score, string(data.get("category")), previous, difference,
+                Boolean.TRUE.equals(data.get("provisional")), factors);
+    }
+
+    private Integer nullableInteger(Object value) {
+        return value instanceof Number number ? number.intValue() : null;
+    }
+
+    private int integer(Object value, int fallback) {
+        return value instanceof Number number ? number.intValue() : fallback;
+    }
+
+    private String string(Object value) { return value instanceof String text ? text : ""; }
 
     private Number number(DocumentSnapshot document, String field) {
         Object value = document.get(field);

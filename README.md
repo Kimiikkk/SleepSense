@@ -50,5 +50,29 @@ The Firebase Web API key identifies the browser app and is not a service-account
 The backend is intentionally organized around domain classes and services so the team can demonstrate:
 classes/objects, encapsulation, constructors, abstraction, inheritance, overriding, polymorphism, composition, enum, collections, exception handling, validation and modular design.
 
-## Next build stage
-Add the full sensor hierarchy (`Sensor`, `EEGSensor`, `HeartRateSensor`, `MotionSensor`), dedicated reading classes, richer session history/report pages, formal REST DTOs, automated tests, and a real AI provider behind the existing AI service abstraction.
+## Advanced sleep features
+
+The dashboard keeps its existing anchored sections and adds the following account-specific features:
+
+- **Smart Sleep Score:** An explainable 0–100 prototype score with factor contributions, prior-session comparison, provisional state for missing inputs, and 7/30-day averages. The configurable weights are in `.env.example`; missing measurements are excluded instead of treated as zero.
+- **Sleep analysis:** 7, 30, and 90-day summaries, prior-period comparisons, duration/score/stage/vital/consistency charts, and missing-data handling. Session reads are bounded to the latest 500 records for feature calculations.
+- **Sleep journal:** One editable entry per date, date filtering, and descriptive habit comparisons after five matched dates. Associations are not evidence of causation.
+- **EEG monitoring:** Select a saved session to view its Delta, Theta, Alpha, and Beta relative values, distribution, and historical band summaries. Missing band values remain blank. Current generated readings are simulated; raw EEG waveform data is not stored.
+- **PDF reports:** Daily, weekly, and monthly PDFs are generated in Java from the signed-in user's report data.
+- **Sleep goals:** Configurable duration and schedule, current-week progress, four-week history against the current goal, a measured-data streak, and idempotent achievements. Simulated nights never earn achievements.
+- **AI Sleep Coach:** The existing local rule-based guide remains available by default. To enable the optional OpenAI Responses provider, set `AI_PROVIDER=openai-responses`, `AI_API_KEY`, and optionally `AI_MODEL`, `AI_API_BASE_URL`, and `AI_TIMEOUT_SECONDS` in the server environment. The key stays server-side. The coach sends a short, bounded summary of the signed-in user's recent sessions and up to seven journal entries; provider failures fall back to the local guide. The coach provides general wellness information, not diagnosis.
+
+For local development, put these settings in the ignored `.env` file. For Render, set the same variables in the service's Environment settings; do not upload a Firebase service-account JSON or AI API key to GitHub. `AI_PROVIDER=none` is the default and requires no AI account. Browser bedtime reminders require explicit notification permission and only run while the dashboard is open; this prototype does not run a background scheduler.
+
+Feature data is kept under the existing Firestore profile document resolved by the authenticated backend: `sleepJournal/{yyyy-MM-dd}`, `sleepGoals/current`, and `achievements/{achievementCode}`. Writes include the authenticated Firebase UID and are performed with Firebase Admin SDK by the Spring application. Existing profile and `sleepSessions` documents are not migrated or deleted. Firestore browser rules continue to deny direct client access.
+
+## Build and tests
+
+Run the complete test suite and package from this directory:
+
+```bash
+mvn -q test
+mvn -q -DskipTests package
+```
+
+The tests cover score bounds and missing inputs, analytics comparisons, journal validation and correlation thresholds, measured-only goals, authenticated profile ownership, coach fallback, and report PDF generation. A live Firebase account, SMS, Google sign-in, and external AI credentials are environment-dependent and are not replaced by those unit tests.
