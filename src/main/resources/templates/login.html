@@ -14,17 +14,18 @@
       <span class="brand-name">sleep<span>sense</span></span>
     </a>
     <h1>Welcome back</h1>
-    <p>Sign in with your SleepSense email and password, or continue with Google.</p>
+    <p>Sign in with email and password, Google, or a one-time phone code.</p>
     <div class="notice" role="status" th:if="${param.registered}">Account created. You can now sign in.</div>
     <div class="error" role="alert" th:if="${param.error}">Email or password wasn’t recognized. Try again.</div>
     <div class="notice" role="status" th:if="${param.logout}">You have been logged out.</div>
-    <form method="post" action="/login" class="form">
+    <form id="emailSignIn" method="post" action="/login" class="form">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <label>Email address<input type="email" name="username" placeholder="you@example.com" autocomplete="email" required></label>
       <label>Password<input type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required></label>
       <button class="button button-primary full" type="submit">Sign in</button>
     </form>
-    <div class="divider"><span>or</span></div>
+    <button id="resendEmailVerification" class="button button-secondary full email-verify-button" type="button" hidden>Resend verification email</button>
+    <div class="divider" th:if="${firebaseEnabled}"><span>or</span></div>
     <button id="googleSignIn" class="button button-secondary full" type="button"
             th:if="${firebaseEnabled}"
             th:data-api-key="${firebaseApiKey}"
@@ -33,75 +34,278 @@
             th:data-app-id="${firebaseAppId}">
       Continue with Google
     </button>
-    <p id="googleSignInStatus" class="auth-note" role="status" aria-live="polite" hidden></p>
+    <div class="divider" th:if="${firebaseEnabled}"><span>or use your phone</span></div>
+    <section class="phone-signin" th:if="${firebaseEnabled}" aria-label="Sign in with phone number">
+      <label for="phoneNumber">Phone number</label>
+      <div class="phone-input-row">
+        <input id="phoneNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="+1 555 123 4567" aria-describedby="phoneHelp">
+        <button id="sendPhoneCode" class="button button-secondary" type="button">Send code</button>
+      </div>
+      <small id="phoneHelp">Include your country code, for example +1.</small>
+      <div id="phoneRecaptcha" class="phone-recaptcha"></div>
+      <div id="phoneCodeStep" class="phone-code-step" hidden>
+        <label for="phoneCode">Verification code</label>
+        <div class="phone-input-row">
+          <input id="phoneCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code" maxlength="10">
+          <button id="verifyPhoneCode" class="button button-primary" type="button">Verify</button>
+        </div>
+      </div>
+    </section>
+    <p id="firebaseSignInStatus" class="auth-note" role="status" aria-live="polite" th:if="${firebaseEnabled}" hidden></p>
     <a class="auth-link" href="/signup">Create an account</a>
     <p class="auth-note">SleepSense is a software prototype. Wearable readings are simulated.</p>
   </main>
   <script type="module" th:if="${firebaseEnabled}">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js';
+    import {
+      getAuth, GoogleAuthProvider, RecaptchaVerifier,
+      signInWithPopup, signInWithPhoneNumber, signInWithEmailAndPassword,
+      sendEmailVerification, reload, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js';
 
-    const button = document.getElementById('googleSignIn');
-    const status = document.getElementById('googleSignInStatus');
+    const googleButton = document.getElementById('googleSignIn');
+    const emailForm = document.getElementById('emailSignIn');
+    const resendEmailVerification = document.getElementById('resendEmailVerification');
+    const status = document.getElementById('firebaseSignInStatus');
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const phoneCodeInput = document.getElementById('phoneCode');
+    const sendPhoneCodeButton = document.getElementById('sendPhoneCode');
+    const verifyPhoneCodeButton = document.getElementById('verifyPhoneCode');
+    const phoneCodeStep = document.getElementById('phoneCodeStep');
     const csrf = document.querySelector('input[name="_csrf"]')?.value;
     const firebaseApp = initializeApp({
-      apiKey: button.dataset.apiKey,
-      authDomain: button.dataset.authDomain,
-      projectId: button.dataset.projectId,
-      appId: button.dataset.appId
+      apiKey: googleButton.dataset.apiKey,
+      authDomain: googleButton.dataset.authDomain,
+      projectId: googleButton.dataset.projectId,
+      appId: googleButton.dataset.appId
     });
     const auth = getAuth(firebaseApp);
+    const pendingVerificationKey = 'sleepsense.pending-email-verification-uid';
+    const emailVerificationSettings = {
+      url: new URL('/login?emailVerified=1', window.location.origin).toString()
+    };
+    let recaptchaVerifier = null;
+    let confirmationResult = null;
+    let confirmationPhoneNumber = '';
 
-    button.addEventListener('click', async () => {
-      button.disabled = true;
+    function normalizedPhoneNumber() {
+      return phoneNumberInput.value.trim().replace(/[\s()-]/g, '');
+    }
+
+    phoneNumberInput.addEventListener('input', () => {
+      if (confirmationPhoneNumber && normalizedPhoneNumber() !== confirmationPhoneNumber) {
+        confirmationResult = null;
+        confirmationPhoneNumber = '';
+        phoneCodeInput.value = '';
+        phoneCodeStep.hidden = true;
+      }
+    });
+
+    async function postFirebaseToken(idToken, profile = {}) {
+      const response = await fetch('/api/auth/firebase', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrf || ''
+        },
+        body: JSON.stringify({ idToken, ...profile })
+      });
+      const responseText = await response.text();
+      const contentType = response.headers.get('content-type') || '';
+      let payload = {};
+      if (responseText && contentType.toLowerCase().includes('json')) {
+        try {
+          payload = JSON.parse(responseText);
+        } catch {
+          throw new Error('SleepSense returned an unreadable sign-in response. Refresh the page and try again.');
+        }
+      }
+      if (!response.ok) {
+        throw new Error(payload.detail || payload.message || `SleepSense could not verify the sign-in (HTTP ${response.status}). Refresh the page and try again.`);
+      }
+      if (!contentType.toLowerCase().includes('json') || !payload.redirect) {
+        throw new Error('SleepSense returned an unexpected sign-in response. Refresh the page and try again.');
+      }
+      localStorage.removeItem(pendingVerificationKey);
+      window.location.assign(payload.redirect);
+    }
+
+    function showError(error, fallback) {
+      status.hidden = false;
+      if (error?.code === 'auth/billing-not-enabled') {
+        status.textContent = 'Firebase blocks real SMS until Cloud Billing is linked. Its first 10 SMS each day are not billed, but billing still has to be enabled. To test without billing, add a fictional phone number and fixed code in Firebase Console → Authentication → Sign-in method → Phone numbers for testing, then enter that number and code here.';
+        return;
+      }
+      status.textContent = error?.message || fallback;
+    }
+
+    function emailAuthErrorMessage(error, isSignup = false) {
+      if (error?.code === 'auth/invalid-email') return 'Enter a valid email address.';
+      if (error?.code === 'auth/weak-password') return 'Choose a stronger password with at least 8 characters.';
+      if (error?.code === 'auth/email-already-in-use') return 'This email already has a Firebase account. Sign in with that account instead.';
+      if (error?.code === 'auth/operation-not-allowed') return 'Email/password sign-in is not enabled for this Firebase project.';
+      if (error?.code === 'auth/network-request-failed') return 'Firebase could not be reached. Check your connection and try again.';
+      if (isSignup) return error?.message || 'Firebase could not create your account. Please try again.';
+      return 'Email or password was not recognized. If this is an older SleepSense account, create Firebase credentials with the same email from “Create an account” to connect your existing profile.';
+    }
+
+    emailForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submitButton = emailForm.querySelector('button[type="submit"]');
+      const email = emailForm.elements.username.value.trim();
+      const password = emailForm.elements.password.value;
+      submitButton.disabled = true;
+      resendEmailVerification.hidden = true;
+      status.hidden = false;
+      status.textContent = 'Verifying your account with Firebase…';
+      try {
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        await reload(credential.user);
+        if (!credential.user.emailVerified) {
+          status.textContent = 'Verify your email from the link we sent before signing in. You can resend that link below.';
+          resendEmailVerification.hidden = false;
+          submitButton.disabled = false;
+          return;
+        }
+        await postFirebaseToken(await credential.user.getIdToken(true));
+      } catch (error) {
+        status.hidden = false;
+        status.textContent = emailAuthErrorMessage(error);
+        submitButton.disabled = false;
+      }
+    });
+
+    resendEmailVerification.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        status.hidden = false;
+        status.textContent = 'Enter your email and password first, then choose Sign in to request a verification link.';
+        return;
+      }
+      resendEmailVerification.disabled = true;
+      try {
+        localStorage.setItem(pendingVerificationKey, user.uid);
+        await sendEmailVerification(user, emailVerificationSettings);
+        status.hidden = false;
+        status.textContent = 'A new verification link was sent. Open it and SleepSense will continue to your profile setup.';
+      } catch (error) {
+        status.hidden = false;
+        status.textContent = error?.code === 'auth/unauthorized-continue-uri'
+          ? 'Add this app’s domain to Firebase Authentication → Settings → Authorized domains, then resend the verification email.'
+          : error?.message || 'Firebase could not resend the verification email. Please try again.';
+      } finally {
+        resendEmailVerification.disabled = false;
+      }
+    });
+
+    googleButton.addEventListener('click', async () => {
+      googleButton.disabled = true;
       status.hidden = false;
       status.textContent = 'Connecting to Google…';
-      let stage = 'Google authentication';
       try {
         const result = await signInWithPopup(auth, new GoogleAuthProvider());
         const idToken = await result.user.getIdToken();
-        stage = 'SleepSense session verification';
-        const response = await fetch('/api/auth/firebase', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': csrf || ''
-          },
-          body: JSON.stringify({ idToken })
-        });
-        const responseText = await response.text();
-        const contentType = response.headers.get('content-type') || '';
-        let payload = {};
-        if (responseText && contentType.toLowerCase().includes('json')) {
-          try {
-            payload = JSON.parse(responseText);
-          } catch {
-            throw new Error('SleepSense returned an unreadable sign-in response. Refresh the page and try again.');
-          }
-        }
-        if (!response.ok) {
-          throw new Error(payload.detail || payload.message || `SleepSense could not verify the sign-in (HTTP ${response.status}). Refresh the page and try again.`);
-        }
-        if (!contentType.toLowerCase().includes('json') || !payload.redirect) {
-          throw new Error('SleepSense returned an unexpected sign-in response. Refresh the page and try again.');
-        }
-        window.location.assign(payload.redirect || '/dashboard');
+        await postFirebaseToken(idToken);
       } catch (error) {
         if (error.code === 'auth/popup-closed-by-user') {
           status.textContent = 'Sign-in was cancelled. You can try again whenever you’re ready.';
-        } else if (error instanceof SyntaxError || /json\.parse|unexpected character.*json/i.test(error.message || '')) {
-          status.textContent = stage === 'Google authentication'
-            ? 'Google returned an unreadable response. Check the Firebase Web API key, Google provider, and authorized domain.'
-            : 'SleepSense returned an unreadable response. Refresh the page and check the server logs.';
         } else {
-          status.textContent = error.message || 'Google sign-in could not be completed. Please try again.';
+          showError(error, 'Google sign-in could not be completed. Please try again.');
         }
-        button.disabled = false;
+        googleButton.disabled = false;
       }
     });
+
+    sendPhoneCodeButton.addEventListener('click', async () => {
+      const phoneNumber = normalizedPhoneNumber();
+      if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+        status.hidden = false;
+        status.textContent = 'Enter a valid phone number with its country code, such as +1 555 123 4567.';
+        phoneNumberInput.focus();
+        return;
+      }
+
+      sendPhoneCodeButton.disabled = true;
+      confirmationResult = null;
+      confirmationPhoneNumber = '';
+      phoneCodeInput.value = '';
+      phoneCodeStep.hidden = true;
+      status.hidden = false;
+      status.textContent = 'Preparing secure phone verification…';
+      try {
+        if (recaptchaVerifier) recaptchaVerifier.clear();
+        recaptchaVerifier = new RecaptchaVerifier(auth, 'phoneRecaptcha', { size: 'normal' });
+        await recaptchaVerifier.render();
+        confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+        confirmationPhoneNumber = phoneNumber;
+        phoneCodeStep.hidden = false;
+        phoneCodeInput.focus();
+        status.textContent = 'Check your phone for the code. For a Firebase test number, use its preset code from the console.';
+      } catch (error) {
+        showError(error, 'Could not send a verification code. Check the number and try again.');
+        if (recaptchaVerifier) recaptchaVerifier.clear();
+        recaptchaVerifier = null;
+      } finally {
+        sendPhoneCodeButton.disabled = false;
+      }
+    });
+
+    verifyPhoneCodeButton.addEventListener('click', async () => {
+      const code = phoneCodeInput.value.trim();
+      if (!confirmationResult || !code) {
+        status.hidden = false;
+        status.textContent = 'Enter the verification code sent to your phone.';
+        phoneCodeInput.focus();
+        return;
+      }
+
+      verifyPhoneCodeButton.disabled = true;
+      status.hidden = false;
+      status.textContent = 'Verifying your phone number…';
+      try {
+        const result = await confirmationResult.confirm(code);
+        await postFirebaseToken(await result.user.getIdToken());
+      } catch (error) {
+        showError(error, 'The verification code could not be confirmed. Check it and try again.');
+        verifyPhoneCodeButton.disabled = false;
+      }
+    });
+
+    async function continueVerifiedSignup() {
+      if (new URLSearchParams(window.location.search).get('emailVerified') !== '1') return;
+      status.hidden = false;
+      status.textContent = 'Email verified. Continuing to your SleepSense profile…';
+      try {
+        const user = await new Promise((resolve, reject) => {
+          let unsubscribe = () => {};
+          unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            unsubscribe();
+            resolve(currentUser);
+          }, (error) => {
+            unsubscribe();
+            reject(error);
+          });
+        });
+        const expectedUid = localStorage.getItem(pendingVerificationKey);
+        if (!user || !expectedUid || user.uid !== expectedUid) {
+          status.textContent = 'Email verified. Sign in with that email and password to continue to your profile setup.';
+          return;
+        }
+        await reload(user);
+        if (!user.emailVerified || !user.providerData.some(({ providerId }) => providerId === 'password')) {
+          status.textContent = 'Email verified. Sign in with that email and password to continue.';
+          return;
+        }
+        await postFirebaseToken(await user.getIdToken(true));
+      } catch (error) {
+        showError(error, 'Email verified, but SleepSense could not finish signing you in. Please try again.');
+      }
+    }
+
+    void continueVerifiedSignup();
   </script>
 </body>
 </html>

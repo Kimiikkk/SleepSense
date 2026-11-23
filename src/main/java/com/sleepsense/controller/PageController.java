@@ -68,6 +68,11 @@ public class PageController {
 
     @GetMapping("/login")
     public String login(Model model) {
+        addFirebaseAuthConfig(model);
+        return "login";
+    }
+
+    private void addFirebaseAuthConfig(Model model) {
         boolean firebaseReady = firebaseAdminEnabled && hasValue(firebaseApiKey) && hasValue(firebaseAuthDomain)
                 && hasValue(firebaseProjectId) && hasValue(firebaseAppId);
         model.addAttribute("firebaseEnabled", firebaseReady);
@@ -75,7 +80,6 @@ public class PageController {
         model.addAttribute("firebaseAuthDomain", firebaseAuthDomain);
         model.addAttribute("firebaseProjectId", firebaseProjectId);
         model.addAttribute("firebaseAppId", firebaseAppId);
-        return "login";
     }
 
     private boolean hasValue(String value) {
@@ -84,6 +88,7 @@ public class PageController {
 
     @GetMapping("/signup")
     public String signup(Model model) {
+        addFirebaseAuthConfig(model);
         model.addAttribute("error", "");
         return "signup";
     }
@@ -135,23 +140,34 @@ public class PageController {
     @GetMapping("/complete-profile")
     public String completeProfile(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(PENDING_GOOGLE_UID) == null) {
+        if (session == null || session.getAttribute(PENDING_FIREBASE_UID) == null) {
             return "redirect:/login";
         }
+        model.addAttribute("needsName", Boolean.TRUE.equals(session.getAttribute(PENDING_PROFILE_NEEDS_NAME)));
+        model.addAttribute("fullName", session.getAttribute(PENDING_PROFILE_FULL_NAME));
         model.addAttribute("error", "");
         return "complete-profile";
     }
 
     @PostMapping("/complete-profile")
-    public String saveCompletedProfile(@RequestParam int age, HttpServletRequest request,
+    public String saveCompletedProfile(@RequestParam(required = false, defaultValue = "") String fullName,
+                                       @RequestParam int age, HttpServletRequest request,
                                        HttpServletResponse response, Model model) {
         HttpSession session = request.getSession(false);
-        Object pendingUid = session == null ? null : session.getAttribute(PENDING_GOOGLE_UID);
+        Object pendingUid = session == null ? null : session.getAttribute(PENDING_FIREBASE_UID);
         if (!(pendingUid instanceof String firebaseUid) || firebaseUid.isBlank()) {
             return "redirect:/login";
         }
+        boolean needsName = Boolean.TRUE.equals(session.getAttribute(PENDING_PROFILE_NEEDS_NAME));
+        model.addAttribute("needsName", needsName);
+        model.addAttribute("fullName", fullName);
         if (age < 1 || age > 120) {
             model.addAttribute("error", "Enter an age between 1 and 120.");
+            return "complete-profile";
+        }
+        String cleanName = fullName == null ? "" : fullName.trim();
+        if (needsName && (cleanName.isBlank() || cleanName.length() > 255)) {
+            model.addAttribute("error", "Enter a name between 1 and 255 characters.");
             return "complete-profile";
         }
 
@@ -159,37 +175,38 @@ public class PageController {
         try {
             user = users.findByFirebaseUid(firebaseUid).orElse(null);
         } catch (RuntimeException e) {
-            log.error("Google onboarding could not load the Firestore profile; cause type={}",
+            log.error("Firebase onboarding could not load the Firestore profile; cause type={}",
                     e.getClass().getSimpleName());
             model.addAttribute("error", "We could not load your profile just now. Please try again.");
             return "complete-profile";
         }
         if (user == null) {
-            session.removeAttribute(PENDING_GOOGLE_UID);
+            clearPendingProfile(session);
             return "redirect:/login";
         }
 
         if (!user.isOnboardingComplete()) {
             user.setAge(age);
+            if (needsName) user.setFullName(cleanName);
             user.setOnboardingComplete(true);
             try {
                 users.save(user);
             } catch (RuntimeException e) {
-                log.error("Google onboarding could not save the Firestore profile; cause type={}",
+                log.error("Firebase onboarding could not save the Firestore profile; cause type={}",
                         e.getClass().getSimpleName());
                 model.addAttribute("error", "We could not save your profile just now. Please try again.");
                 return "complete-profile";
             }
         }
 
-        session.removeAttribute(PENDING_GOOGLE_UID);
+        clearPendingProfile(session);
         authenticateUser(user, request, response);
         return "redirect:/dashboard";
     }
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication auth, Model model) {
-        User user = users.findByEmailIgnoreCase(auth.getName()).orElseThrow();
+        User user = authenticatedUser(auth);
         var history = sessions.findByUserOrderByStartTimeDesc(user);
         var latest = history.isEmpty() ? dummy.generate(user) : history.get(0);
         if (history.isEmpty()) {
@@ -204,9 +221,7 @@ public class PageController {
     @GetMapping("/profile")
     public String profile(Authentication auth, Model model) {
 
-            User user = users
-                .findByEmailIgnoreCase(auth.getName())
-                .orElseThrow();
+            User user = authenticatedUser(auth);
 
             model.addAttribute("user", user);
 
@@ -216,7 +231,7 @@ public class PageController {
     @PostMapping(value = "/api/demo/generate-session", produces = "application/json")
     @ResponseBody
     public Map<String, Object> generate(Authentication auth) {
-        User user = users.findByEmailIgnoreCase(auth.getName()).orElseThrow();
+        User user = authenticatedUser(auth);
         SleepSession generated = dummy.generate(user);
 
         var history = sessions.findByUserOrderByStartTimeDesc(user);
@@ -252,7 +267,7 @@ public class PageController {
     @GetMapping("/api/chat")
     @ResponseBody
     public String chat(@RequestParam String message, Authentication auth) {
-        User user = users.findByEmailIgnoreCase(auth.getName()).orElseThrow();
+        User user = authenticatedUser(auth);
         var latest = sessions.findFirstByUserOrderByIdDesc(user).orElse(null);
         if (latest == null) {
             latest = dummy.generate(user);
@@ -271,12 +286,15 @@ public class PageController {
         }
 
         try {
-            FirebaseSignInService.GoogleSignInResult signIn = firebaseSignIn.signInWithGoogle(body.idToken());
+            FirebaseSignInService.FirebaseSignInResult signIn =
+                    firebaseSignIn.signInWithFirebaseToken(body.idToken(), body.fullName(), body.age());
             User user = signIn.user();
-            if (signIn.needsAge()) {
+            if (signIn.needsProfile()) {
                 HttpSession session = request.getSession(true);
                 request.changeSessionId();
-                session.setAttribute(PENDING_GOOGLE_UID, user.getFirebaseUid());
+                session.setAttribute(PENDING_FIREBASE_UID, user.getFirebaseUid());
+                session.setAttribute(PENDING_PROFILE_NEEDS_NAME, signIn.needsName());
+                session.setAttribute(PENDING_PROFILE_FULL_NAME, user.getFullName());
                 new HttpSessionSecurityContextRepository().saveContext(
                         SecurityContextHolder.createEmptyContext(), request, response);
                 SecurityContextHolder.clearContext();
@@ -285,25 +303,42 @@ public class PageController {
             authenticateUser(user, request, response);
             return ResponseEntity.ok(Map.of("redirect", "/dashboard"));
         } catch (ResponseStatusException e) {
-            String message = e.getReason() == null ? "Google sign-in could not be verified." : e.getReason();
+            String message = e.getReason() == null ? "Firebase sign-in could not be verified." : e.getReason();
             return ResponseEntity.status(e.getStatusCode()).body(Map.of("message", message));
         } catch (Exception e) {
             Throwable root = e;
             while (root.getCause() != null) root = root.getCause();
-            log.error("Google sign-in persistence failed; root cause type={}", root.getClass().getSimpleName());
+            log.error("Firebase sign-in persistence failed; root cause type={}", root.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of("message", firebasePersistenceFailure(e)));
         }
     }
 
-    private static final String PENDING_GOOGLE_UID = "pendingGoogleUid";
+    private static final String PENDING_FIREBASE_UID = "pendingFirebaseUid";
+    private static final String PENDING_PROFILE_NEEDS_NAME = "pendingProfileNeedsName";
+    private static final String PENDING_PROFILE_FULL_NAME = "pendingProfileFullName";
+
+    private void clearPendingProfile(HttpSession session) {
+        session.removeAttribute(PENDING_FIREBASE_UID);
+        session.removeAttribute(PENDING_PROFILE_NEEDS_NAME);
+        session.removeAttribute(PENDING_PROFILE_FULL_NAME);
+    }
+
+    private User authenticatedUser(Authentication authentication) {
+        String principal = authentication.getName();
+        if (principal.startsWith("firebase:")) {
+            return users.findByFirebaseUid(principal.substring("firebase:".length())).orElseThrow();
+        }
+        return users.findByEmailIgnoreCase(principal).orElseThrow();
+    }
 
     private void authenticateUser(User user, HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(true);
-        session.removeAttribute(PENDING_GOOGLE_UID);
+        clearPendingProfile(session);
         request.changeSessionId();
         var authenticated = UsernamePasswordAuthenticationToken.authenticated(
-                user.getEmail(), null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                user.getFirebaseUid() == null ? user.getEmail() : "firebase:" + user.getFirebaseUid(),
+                null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authenticated);
         SecurityContextHolder.setContext(context);
@@ -326,24 +361,28 @@ public class PageController {
     private String firestoreFailure(String detail, String dataType) {
         if (detail.contains("SERVICE_DISABLED") || detail.contains("API HAS NOT BEEN USED")
                 || detail.contains("CLOUD FIRESTORE API IS DISABLED")) {
-            return "Google was verified, but the Cloud Firestore API is disabled for this Firebase project. Enable the API in Google Cloud, then retry.";
+            return "Firebase sign-in was verified, but the Cloud Firestore API is disabled for this project. Enable the API in Google Cloud, then retry.";
         }
         if (detail.contains("PERMISSION_DENIED") || detail.contains("PERMISSION DENIED")) {
-            return "Google was verified, but Firestore denied saving your " + dataType + ". Check that the backend service account has Firestore write access, then retry.";
+            return "Firebase sign-in was verified, but Firestore denied saving your " + dataType + ". Check that the backend service account has Firestore write access, then retry.";
         }
         if (detail.contains("NOT_FOUND") || detail.contains("DATABASE (DEFAULT) DOES NOT EXIST")) {
-            return "Google was verified, but no Firestore database was found in this project. Create the project's default Firestore database, then retry.";
+            return "Firebase sign-in was verified, but no Firestore database was found in this project. Create the project's default Firestore database, then retry.";
         }
         if (detail.contains("UNAUTHENTICATED") || detail.contains("INVALID CREDENTIALS")) {
-            return "Google was verified, but Firebase rejected the backend credentials. Check that the service-account key belongs to the configured Firebase project.";
+            return "Firebase sign-in was verified, but Firebase rejected the backend credentials. Check that the service-account key belongs to the configured Firebase project.";
         }
         if (detail.contains("UNAVAILABLE") || detail.contains("DEADLINE_EXCEEDED")) {
-            return "Google was verified, but Firestore is temporarily unreachable. Check the server's network access and try again.";
+            return "Firebase sign-in was verified, but Firestore is temporarily unreachable. Check the server's network access and try again.";
         }
-        return "Google was verified, but SleepSense could not save your " + dataType + ". Check the server log for the Firebase error.";
+        return "Firebase sign-in was verified, but SleepSense could not save your " + dataType + ". Check the server log for the Firebase error.";
     }
 
-    public record FirebaseSignInRequest(String idToken) {}
+    public record FirebaseSignInRequest(String idToken, String fullName, Integer age) {
+        public FirebaseSignInRequest(String idToken) {
+            this(idToken, null, null);
+        }
+    }
 
     @GetMapping("/api/health")
     @ResponseBody

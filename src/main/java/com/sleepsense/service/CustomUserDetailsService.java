@@ -17,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         var user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
-            throw new UsernameNotFoundException("This account must use Google sign-in.");
+            throw new UsernameNotFoundException("This account must use Firebase sign-in.");
         }
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

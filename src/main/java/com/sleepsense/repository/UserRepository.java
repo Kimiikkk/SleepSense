@@ -27,6 +27,10 @@ public class UserRepository {
         return data.findUserByFirebaseUid(firebaseUid);
     }
 
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return data.findUserByPhoneNumber(phoneNumber);
+    }
+
     public boolean existsByEmailIgnoreCase(String email) {
         return data.userExistsByEmail(email);
     }

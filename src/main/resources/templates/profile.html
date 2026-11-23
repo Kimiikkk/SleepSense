@@ -35,14 +35,14 @@
       <section class="welcome-row"><div><p class="date-line">ACCOUNT</p><h1>Your profile</h1><p class="welcome-copy">Personal details and SleepSense information.</p></div></section>
       <div class="profile-layout">
         <section class="profile-hero">
-          <div class="profile-avatar"><span th:text="${#strings.substring(user.fullName, 0, 1).toUpperCase()}">K</span></div>
+          <div class="profile-avatar"><span th:text="${#strings.isEmpty(user.fullName) ? 'S' : #strings.substring(user.fullName, 0, 1).toUpperCase()}">K</span></div>
           <div class="profile-hero-info"><p class="section-kicker">SLEEPSENSE ACCOUNT</p><h2 th:text="${user.fullName}">Krish</h2><p>Your personal SleepSense profile</p></div>
         </section>
         <section class="profile-section">
           <h2>Personal information</h2><p class="section-note">Information associated with your account.</p>
           <div class="profile-grid">
             <div class="profile-field"><span>Full name</span><strong th:text="${user.fullName}">Krish</strong></div>
-            <div class="profile-field"><span>Email address</span><strong th:text="${user.email}">krish@example.com</strong></div>
+            <div class="profile-field"><span th:text="${#strings.isEmpty(user.email) ? 'Phone number' : 'Email address'}">Email address</span><strong th:text="${!#strings.isEmpty(user.email) ? user.email : (!#strings.isEmpty(user.phoneNumber) ? user.phoneNumber : 'Not provided')}">krish@example.com</strong></div>
             <div class="profile-field"><span>Age</span><strong th:text="${user.age > 0 ? user.age : 'Not provided'}">20</strong></div>
             <div class="profile-field"><span>Account type</span><strong>SleepSense User</strong></div>
           </div>

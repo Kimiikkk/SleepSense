@@ -9,6 +9,8 @@ public class User {
     private String email;
     private String emailLowercase;
     private String firebaseUid;
+    private String phoneNumber;
+    private String authProvider;
     private String passwordHash;
     private int age;
     private boolean onboardingComplete = true;
@@ -31,6 +33,8 @@ public class User {
     public String getEmail() { return email; }
     public String getEmailLowercase() { return emailLowercase; }
     public String getFirebaseUid() { return firebaseUid; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public String getAuthProvider() { return authProvider; }
     public String getPasswordHash() { return passwordHash; }
     public int getAge() { return age; }
     public boolean isOnboardingComplete() { return onboardingComplete; }
@@ -46,4 +50,6 @@ public class User {
     public void setAge(int age) { this.age = age; }
     public void setOnboardingComplete(boolean onboardingComplete) { this.onboardingComplete = onboardingComplete; }
     public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public void setAuthProvider(String authProvider) { this.authProvider = authProvider; }
 }

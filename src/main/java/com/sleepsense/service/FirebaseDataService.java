@@ -46,11 +46,14 @@ public class FirebaseDataService {
         profile.put("firebaseUid", user.getFirebaseUid());
         profile.put("email", user.getEmail());
         profile.put("emailLowercase", normalizedEmail(user.getEmail()));
+        profile.put("phoneNumber", user.getPhoneNumber());
         profile.put("fullName", user.getFullName());
         profile.put("age", user.getAge());
         profile.put("passwordHash", user.getPasswordHash());
         profile.put("onboardingComplete", user.isOnboardingComplete());
-        profile.put("authProvider", user.getFirebaseUid() == null ? "password" : "google.com");
+        profile.put("authProvider", user.getAuthProvider() == null
+                ? (user.getFirebaseUid() == null ? "password" : "google.com")
+                : user.getAuthProvider());
         profile.put("updatedAt", Instant.now().toString());
         await(userDocument(user.getId()).set(profile, SetOptions.merge()), "Firestore could not save this account.");
         return user;
@@ -77,17 +80,26 @@ public class FirebaseDataService {
 
         QuerySnapshot byField = await(firestore().collection("users")
                 .whereEqualTo("firebaseUid", uid).limit(1).get(),
-                "Firestore could not look up this Google account.");
+                "Firestore could not look up this Firebase account.");
         if (!byField.isEmpty()) return Optional.of(toUser(byField.getDocuments().get(0)));
 
         QuerySnapshot legacyField = await(firestore().collection("users")
                 .whereEqualTo("uid", uid).limit(1).get(),
-                "Firestore could not look up this Google account.");
+                "Firestore could not look up this Firebase account.");
         if (!legacyField.isEmpty()) return Optional.of(toUser(legacyField.getDocuments().get(0)));
 
         DocumentSnapshot legacyDocument = await(userDocument(uid).get(),
-                "Firestore could not look up this Google account.");
+                "Firestore could not look up this Firebase account.");
         return legacyDocument.exists() ? Optional.of(toUser(legacyDocument)) : Optional.empty();
+    }
+
+    public Optional<User> findUserByPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.isBlank()) return Optional.empty();
+
+        QuerySnapshot snapshot = await(firestore().collection("users")
+                .whereEqualTo("phoneNumber", phoneNumber.trim()).limit(1).get(),
+                "Firestore could not look up this phone account.");
+        return snapshot.isEmpty() ? Optional.empty() : Optional.of(toUser(snapshot.getDocuments().get(0)));
     }
 
     public boolean userExistsByEmail(String email) {
@@ -150,6 +162,9 @@ public class FirebaseDataService {
         user.setEmail(value(document, "email", ""));
         user.setEmailLowercase(value(document, "emailLowercase", normalizedEmail(user.getEmail())));
         user.setFirebaseUid(value(document, "firebaseUid", value(document, "uid", null)));
+        user.setPhoneNumber(value(document, "phoneNumber", null));
+        user.setAuthProvider(value(document, "authProvider",
+                user.getFirebaseUid() == null ? "password" : "google.com"));
         user.setPasswordHash(value(document, "passwordHash", ""));
         Object age = document.get("age");
         user.setAge(age instanceof Number number ? number.intValue() : 0);

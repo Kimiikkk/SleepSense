@@ -64,7 +64,11 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     HttpSession session = request.getSession(false);
-                    if (session != null) session.removeAttribute("pendingGoogleUid");
+                    if (session != null) {
+                        session.removeAttribute("pendingFirebaseUid");
+                        session.removeAttribute("pendingProfileNeedsName");
+                        session.removeAttribute("pendingProfileFullName");
+                    }
                     response.sendRedirect("/dashboard");
                 })
                 .failureUrl("/login?error")
